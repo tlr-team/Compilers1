@@ -1,3 +1,5 @@
+from .parser_tools import compute_firsts, compute_follows
+
 def build_parsing_table(G, firsts, follows):
     # init parsing table
     M = {}

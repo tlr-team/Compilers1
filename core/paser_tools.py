@@ -156,3 +156,14 @@ def compute_follows(G, firsts):
 
     # Follow(Vn)
     return follows
+
+def Remove_Left_rec(G):
+    bads = []
+
+    for prod in G.Productions:
+        nt = prod.Left
+        if nt == prod.Right[0]:
+            bads.append(prod)
+    
+    
+        
