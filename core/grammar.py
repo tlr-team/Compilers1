@@ -102,6 +102,11 @@ class Terminal(Symbol):
     def IsEpsilon(self):
         return False
 
+class EOF(Terminal):
+
+    def __init__(self, Grammar):
+        super().__init__('$', Grammar)
+
 class Sentence(object):
 
     def __init__(self, *args):
