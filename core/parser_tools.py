@@ -1,4 +1,5 @@
 from itertools import islice
+from .grammar import NonTerminal
 
 class ContainerSet:
     def __init__(self, *values, contains_epsilon=False):
@@ -157,13 +158,19 @@ def compute_follows(G, firsts):
     # Follow(Vn)
     return follows
 
-def Remove_Left_rec(G):
-    bads = []
-
-    for prod in G.Productions:
-        nt = prod.Left
-        if nt == prod.Right[0]:
-            bads.append(prod)
+def remove_Left_rec(G):
+    bads = [prod for prod in G.Productions if prod.Left == prod.Right[0]]
+    get_nt_prime = lambda nt, i: "{0}_{1}".format(prod.Left, 1)# FIXME: all tihs is shit 
     
-    
-        
+    for bad_prod in bads:
+        for prod in bad_prod.Left.productions:
+            pass
+            # suff = 0
+            # while get_nt_prime(prod.Left, suff) in G.nonTerminals.map(lambda i: i.Name):
+            #     suff += 1
+            
+            # new_nt = NonTerminal(get_nt_prime(prod.Left, suff), G)
+            # old_prods = prod.Left.productions
+            # for p in old_prods:
+            #     if p == prod:
+            #         new_nt %= p.Right[1:]
