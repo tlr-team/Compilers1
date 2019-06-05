@@ -58,7 +58,8 @@ def parse_to_grammar(lines):
     G = Grammar()
     script = build_script(terminals, non_terminals, productions)
     # print(script)
-    exec(script, {'G': G}, {})
+    exec(script, {'G': G, '__name__':__name__,}, {})
+    
     return G
 
 def get_symbol_name(symbol: str, on_production=False):
@@ -84,8 +85,8 @@ def get_symbols_assignament(terminals, non_terminals):
     
     return sentence_dist + sentence_nt + sentence_t
 
-def get_attrs(non_terminal, production):
-    return ', None' * (len(production) + (0 if production[0] == '@' else 1)) #TODO: Faltan los atributos.
+def get_attrs(non_terminal, production):# depricated
+    return '' # ', None' * (len(production) + (0 if production[0] == '@'  else 1)) #TODO: Faltan los atributos.
 
 def get_production_assignament(non_terminal, productions):
     assigns = "# ===============  {0} --> {1}  ===================== #\n".format(non_terminal, ' | '.join(re.sub(r'@', 'epsilon', string) for string in productions))
@@ -101,8 +102,7 @@ def get_production_assignament(non_terminal, productions):
 
 def build_script(terminals, non_terminals, productions):
     header = "# Generated Code #\n"
-    imports = ( "from .grammar import Grammar\n"
-                "from .grammar import pprint, inspect\n\n") # TODO: cambiar las importaciones
+    imports = ""#( "from grammar import Grammar\n") # TODO: cambiar las importaciones
 
     initiate_symbols = get_symbols_assignament(terminals, non_terminals)
 
