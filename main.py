@@ -1,10 +1,12 @@
+from tkinter import (
+    DISABLED, END, NORMAL, Button, E, Entry, Label, StringVar, Tk, W)
+
+import cairo
 import core
 import im
 import imageTk
 import rsvg
-import cairo
 
-from tkinter import Tk, Label, Button, Entry, StringVar, DISABLED, NORMAL, END, W, E
 
 class GramarUI:
     def __init__(self, root):
