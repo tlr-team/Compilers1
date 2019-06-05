@@ -174,3 +174,33 @@ def remove_Left_rec(G):
             # for p in old_prods:
             #     if p == prod:
             #         new_nt %= p.Right[1:]
+    
+def Remove_Useless_Productions(Grammar):
+    visited = []
+    Incomming = []
+    bads = []
+
+    for prod in Grammar.Productions:
+        if prod.Left not in visited:
+            visited.append(prod.Left)
+            for i in prod.Right:
+                if i.IsNonTerminal and i not in visited and i not in Incomming:
+                    Incomming.append(i)
+    
+    while(len(Incomming) == 0):
+        t = Incomming.pop()
+        if not t in visited:
+            visited.append(t)
+
+    for i in Grammar.nonTerminals:
+        if i not in visited:
+            bads.append(i)
+
+    dicc = {}
+    
+
+    #construir la gramatica
+
+
+
+
