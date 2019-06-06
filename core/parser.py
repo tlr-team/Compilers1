@@ -17,9 +17,10 @@ SYMBOLS_NAME = {
     "^": "pte",
     ".": "dot",
     ",": "comma",
-    ":": "dotdot", # jeje no me acordaba
+    ":": "dotdot",  # jeje no me acordaba
     ";": "semicolon",
-    "@": "epsilon",
+    "e": "epsilon",
+    "epsilon": "epsilon",
 }
 # falta r'[0-9]+': 'num'
 
@@ -48,7 +49,7 @@ def parse_to_grammar(lines):
     terminals = []
 
     for line in lines:
-        sub_epsilon = re.sub(r"epsilon", "@", line)
+        sub_epsilon = re.sub(r"epsilon", "e", line)
         without_endline = re.sub(r"\n", "", sub_epsilon).strip()
         without_spaces = re.sub(r"\| | \| | \|", "|", without_endline)
         head, prods = [i.strip() for i in re.split(r"-->", without_spaces, 1)]
@@ -92,10 +93,10 @@ def parse_to_grammar(lines):
 def get_symbol_name(symbol: str, on_production=False):
     if symbol == "G":
         return "_G"
-    if symbol.isalpha():
-        return symbol
     elif SYMBOLS_NAME.get(symbol, symbol) == "epsilon":
         return "G.Epsilon" if on_production else SYMBOLS_NAME.get(symbol, symbol)
+    elif symbol.isalpha():
+        return symbol
     elif symbol.isnumeric():
         return "num_{0}".format(symbol)
     elif len(symbol) == 1:
@@ -129,7 +130,7 @@ def get_symbols_assignament(terminals, non_terminals):
 def get_attrs(non_terminal, production):  # depricated
     return (
         ""
-    )  # ', None' * (len(production) + (0 if production[0] == '@'  else 1)) #TODO: Faltan los atributos.
+    )  # ', None' * (len(production) + (0 if production[0] == 'e'  else 1)) #TODO: Faltan los atributos.
 
 
 def get_production_assignament(non_terminal, productions):
@@ -141,13 +142,12 @@ def get_production_assignament(non_terminal, productions):
             " + ".join(get_symbol_name(sym, on_production=True) for sym in prod)
         )
     assigns = "# ===============  {{ {0} --> {1} }}  ===================== #\n".format(
-        non_terminal, " | ".join(re.sub(r"@", "epsilon", p) for p in prods_formatted)
+        non_terminal, " | ".join(re.sub(r"e", "epsilon", p) for p in prods_formatted)
     )
 
     for production in prods_to_operate:
         assigns += "{0} %= {1}".format(
-            get_symbol_name(non_terminal, on_production=True),
-            production,
+            get_symbol_name(non_terminal, on_production=True), production
         )
         assigns += get_attrs(non_terminal, production)
         assigns += "\n"
