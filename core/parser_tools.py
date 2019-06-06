@@ -130,7 +130,7 @@ def compute_follows(G, firsts):
     follows = {}
     change = True
 
-    local_firsts = {}
+    # local_firsts = {}
 
     # init Follow(Vn)
     for nonterminal in G.nonTerminals:
@@ -169,56 +169,62 @@ def compute_follows(G, firsts):
 def get_new_nonterminal(nt_father, suffix, G):
     return NonTerminal("{0}_{1}".format(nt_father, suffix), G)
 
-
-def is_prev_than(ordered_set, index, obj):
-    return obj in ordered_set[:index]
-
-
 def production_begin_ntj(nt_ordered, curr_i, body):
-    return body[0] in nt_ordered[:curr_i]
+    return not body.IsEpsilon and body[0] in nt_ordered[:curr_i]
+
 
 def take_of_initial(body, G):
     if len(body) == 1:
-        return (body[0], G.Epsilon)
-    return (body[0], body[1:])
+        return (body[0], Sentence(G.Epsilon))
+    return (body[0], Sentence(*body[1:]))
 
-def remove_direct_LeftRec_on(nt: NonTerminal, curr_suff):
+
+def remove_direct_left_rec_on(nt: NonTerminal, curr_suff):
     G = nt.Grammar
     bad_prods, others = [], []
     for prod in nt.productions:
-        if prod.Left == prod.Right[0]:
+        if not prod.Right.IsEpsilon and prod.Left == prod.Right[0]:
             bad_prods.append(prod)
         else:
             others.append(prod)
+    new_nt = None
     if bad_prods:
         new_nt = get_new_nonterminal(prod.Left, curr_suff, G)
-        
-        
+        for prod in bad_prods:
+            _, alfa = take_of_initial(prod.Right, G)
+            new_nt %= alfa + new_nt
+            G.Remove_Production(prod)
+        new_nt %= G.Epsilon
+
+        for prod in others:
+            nt %= prod.Right + new_nt
+            G.Remove_Production(prod)
+
         curr_suff += 1
-    return curr_suff
-def remove_direct_LeftRec(G: Grammar):
+    return curr_suff, new_nt
+
+
+def remove_direct_left_rec(G: Grammar):
     suff_nt = {nt: 0 for nt in G.nonTerminals}
-    
+
     for nt in G.nonTerminals:
-        for prod in nt.productions[:]:
-            if prod.Left == prod.Right[0]:
-                new_nt = get_new_nonterminal(prod.Left, suff_nt[prod.Left], G)
-                suff_nt[prod.Left] += 1
-            
+        suff_nt[nt], new_nt = remove_direct_left_rec_on(nt, suff_nt[nt])
+        if new_nt:
+            suff_nt[new_nt] = 0
 
 
 def remove_left_rec(G: Grammar):
     non_terminals = G.nonTerminals
-    
+
     ### del( S --> S ) ###
     for nt in non_terminals:
         for p in nt.productions[:]:
             if len(p.Right) == 1 and p.Right[0].Name == nt.Name:
                 G.Remove_Production(p)
-    
-    ### Topological Order ###
-    nts_ordered = G.nonTerminals 
 
+    ### Topological Order ###
+    nts_ordered = G.nonTerminals
+    suff = 0
     for i in range(len(nts_ordered)):
         Ai: NonTerminal = nts_ordered[i]
         changes = True
@@ -234,10 +240,6 @@ def remove_left_rec(G: Grammar):
                         Ai %= pj.Right + bi
 
         ### Direct Left Recursion ##
-        remove_direct_LeftRec(Ai)
-
-        # new_nt = NonTerminal(get_nt_prime(prod.Left, suff), G)
-        # old_prods = prod.Left.productions
-        # for p in old_prods:
-        #     if p == prod:
-        #         new_nt %= p.Right[1:]
+        remove_direct_left_rec_on(Ai, suff)
+        suff += 1
+    return G
