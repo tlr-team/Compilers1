@@ -169,6 +169,7 @@ def compute_follows(G, firsts):
 def get_new_nonterminal(nt_father, suffix, G):
     return NonTerminal("{0}_{1}".format(nt_father, suffix), G)
 
+
 def production_begin_ntj(nt_ordered, curr_i, body):
     return not body.IsEpsilon and body[0] in nt_ordered[:curr_i]
 
@@ -178,6 +179,18 @@ def take_of_initial(body, G):
         return (body[0], Sentence(G.Epsilon))
     return (body[0], Sentence(*body[1:]))
 
+
+def get_topological_order(G: Grammar):
+    ordered = [G.startSymbol]
+    queue = [G.startSymbol]
+    while queue:
+        cur_nt = queue.pop()
+        for p in cur_nt.productions:
+            for sym in p.Right:
+                if sym.IsNonTerminal and sym not in ordered:
+                    queue.insert(0, sym)
+                    ordered.append(sym)
+    return ordered
 
 def remove_direct_left_rec_on(nt: NonTerminal, curr_suff):
     G = nt.Grammar
@@ -223,7 +236,7 @@ def remove_left_rec(G: Grammar):
                 G.Remove_Production(p)
 
     ### Topological Order ###
-    nts_ordered = G.nonTerminals
+    nts_ordered = get_topological_order(G)
     suff = 0
     for i in range(len(nts_ordered)):
         Ai: NonTerminal = nts_ordered[i]
