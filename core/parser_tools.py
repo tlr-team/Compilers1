@@ -256,3 +256,18 @@ def remove_left_rec(G: Grammar):
         remove_direct_left_rec_on(Ai, suff)
         suff += 1
     return G
+
+def useless_productions(G: Grammar):
+    visited = [G.startSymbol]
+    queue = [G.startSymbol]
+    while queue:
+        cur_nt = queue.pop()
+        for p in cur_nt.productions:
+            for sym in p.Right:
+                if sym.IsNonTerminal and sym not in visited:
+                    queue.insert(0, sym)
+                    visited.append(sym)
+    for nt in G.nonTerminals:
+        if nt not in visited:
+            G.Remove_Symbol(nt)
+    return G
