@@ -167,7 +167,7 @@ def compute_follows(G, firsts):
 
 
 def get_new_nonterminal(nt_father, suffix, G):
-    return NonTerminal("{0}_{1}".format(nt_father, suffix), G)
+    return NonTerminal("{0}\'".format(nt_father), G)
 
 
 def production_begin_ntj(nt_ordered, curr_i, body):
@@ -191,6 +191,7 @@ def get_topological_order(G: Grammar):
                     queue.insert(0, sym)
                     ordered.append(sym)
     return ordered
+
 
 def remove_direct_left_rec_on(nt: NonTerminal, curr_suff):
     G = nt.Grammar
@@ -257,6 +258,7 @@ def remove_left_rec(G: Grammar):
         suff += 1
     return G
 
+
 def useless_productions(G: Grammar):
     visited = [G.startSymbol]
     queue = [G.startSymbol]
@@ -270,4 +272,48 @@ def useless_productions(G: Grammar):
     for nt in G.nonTerminals:
         if nt not in visited:
             G.Remove_Symbol(nt)
+    return G
+
+
+def next_null_index(body, nulleable, last_index):
+    for i in range(last_index, len(body)):
+        if body[i] in nulleable:
+            return i
+    return None
+
+
+def get_combination(body, indexs, nulleable, comb):
+    comb = str(bin(comb))
+    last_index = 0
+    new_body = []
+
+    for i in range(len(comb) - 1, 1, -1):
+        while last_index not in indexs:
+            new_body.append(body[last_index])
+            last_index += 1
+        if comb[i] == "1":
+            new_body.append(body[last_index])
+        last_index += 1
+    new_body.extend(body[last_index:])
+    return Sentence(*new_body)
+
+
+def add_all_combinations(production, nulleables, G):
+    indexs = [i for i, sym in enumerate(production.Right) if sym in nulleables]
+    for i in range(2 ** len(indexs)):
+        production.Left %= get_combination(production.Right, indexs, nulleables, i)
+
+
+def lambda_productions(G: Grammar):
+    nulleables = [
+        nt for nt in G.nonTerminals if any(prod.Right.IsEpsilon for prod in nt.productions)
+    ]
+    for p in G.Productions:
+        if all(sym in nulleables for sym in p.Right) and p.Left not in nulleables:
+            nulleables.append(p.Left)
+
+    for p in G.Productions:
+        if any(n in p.Right for n in nulleables):
+            add_all_combinations(p, nulleables, G)
+
     return G
