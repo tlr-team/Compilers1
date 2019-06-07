@@ -256,3 +256,82 @@ def remove_left_rec(G: Grammar):
         remove_direct_left_rec_on(Ai, suff)
         suff += 1
     return G
+
+def is_regular_grammar(G: Grammar):
+    answer = True
+
+    for prod in G.Productions:
+        if len(prod.Right) > 2:
+            answer = False
+            break
+
+        if not prod.Right.IsEpsilon:
+            if prod.Right[0].IsNonTerminal:
+                answer = False
+                break
+            if len(prod.Right) > 1 and prod.Right[1].IsTerminal:
+                answer = False
+                break
+    return answer
+
+def Remove_Useless_Productions(Grammar):
+    visited = []
+    Incomming = []
+    bads = []
+
+    print("producciones", Grammar.Productions)
+
+    initial = Grammar.startSymbol
+
+    Incomming.append(initial)
+
+    while(len(Incomming) > 0):
+        t = Incomming.pop()
+        if not t in visited:
+            visited.append(t)
+            for prod in Grammar.Productions:
+                if prod.Left == t:
+                    for i in prod.Right:
+                        if i.IsNonTerminal and i not in visited and i not in Incomming:
+                            Incomming.append(i)           
+
+    for i in Grammar.nonTerminals:
+        if i not in visited:
+            bads.append(i)
+
+    print("bads",bads)
+
+    
+    
+
+    #construir la gramatica
+
+def Remove_Bads_Productions(Grammar):
+    dicc = {}
+
+    for t in Grammar.terminals:
+        dicc[t] = True
+    
+    for nt in Grammar.nonTerminals:
+        dicc[nt] = False
+
+    #dicc['epsilon'] = True
+    #dicc['e'] = True
+
+    changed = True
+
+    print(dicc)
+    
+    while(changed):
+        changed = False
+        for prod in Grammar.Productions:
+            for i in prod.Right:
+                print(i)
+                if dicc[i] == False:
+                    break
+            else:
+                if dicc[prod.Left] == False:
+                    dicc[prod.Left] = True
+                    changed = True
+
+    print(dicc)
