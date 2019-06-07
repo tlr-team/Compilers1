@@ -1,0 +1,9 @@
+S -->  S s| s d A|d s B 
+S -->  e 
+C --> d c D
+D --> a s d
+S -->  S s| d 
+A -->B s d | epsilon 
+B --> A s
+B --> C d | epsilon
+G --> a s d

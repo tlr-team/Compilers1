@@ -316,6 +316,16 @@ class Grammar():
 
         production.Left.productions.append(production)
         self.Productions.append(production)
+    
+    def Remove_Production(self, production):
+
+        if len(self.Productions) == 0:
+            return
+
+        assert type(production) == self.pType, "The Productions most be of only 1 type."
+
+        production.Left.productions.remove(production)
+        self.Productions.remove(production)
 
 
     def Terminal(self, name):
