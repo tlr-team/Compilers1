@@ -9,7 +9,7 @@ print('\n\n')
 
 remove_left_rec(G)
 lambda_productions(G)
-# useless_productions(G)
+useless_productions(G)
 
 print(G)
 for i in G.Productions:

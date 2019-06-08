@@ -1,4 +1,4 @@
-S --> abS | abA | abB
-A --> cd
-B --> aB
-C --> dc
+S --> a b  S | a b A | a b B
+A --> c d
+B --> a B
+C --> d c
