@@ -4,5 +4,6 @@ from .parser_tools import (
     remove_left_rec,
     useless_productions,
     lambda_productions,
+    is_regular_grammar,
 )
 from .grammar import *

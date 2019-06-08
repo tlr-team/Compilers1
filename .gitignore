@@ -1,6 +1,12 @@
+__pycache__
+core/__pycache__
+
+.vscode
+
 .directory
 
-
+test*.py
+.directory
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
