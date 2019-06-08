@@ -1,5 +1,6 @@
 # from tkinter import DISABLED, END, NORMAL, Button, E, Entry, Label, StringVar, Tk, W
 from PyQt5 import QtWidgets
+from PyQt5.QtWebEngineWidgets import QWebView
 from MainWindow import Ui_MainWindow
 import cairo
 import core

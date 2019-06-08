@@ -191,7 +191,7 @@ class Ui_MainWindow(object):
         self.actionQuickAnalyse.setStatusTip(_translate("MainWindow", "Análisis rápido"))
         self.actionQuickAnalyse.setShortcut(_translate("MainWindow", "F9"))
 
-from PyQt5 import QtWebKitWidgets
+from PyQt5 import QtWebEngineWidgets
 
 if __name__ == "__main__":
     import sys
