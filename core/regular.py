@@ -1,9 +1,10 @@
 from core.grammar import Grammar
-from core.parser_tools import lambda_productions
+from core.parser_tools import lambda_productions,useless_productions
 from core.automaton import NFA
 
 def convert_to_nfa(G: Grammar):
-    #g = lambda_productions(G)
+    t = lambda_productions(G)
+    g = useless_productions(t)
     #print("antes",g)
     #g = G
 
@@ -17,14 +18,21 @@ def convert_to_nfa(G: Grammar):
     print(g.Productions)
 
     for p in g.Productions:
-        if(len(p.Right) > 1):
-            transitions[(dicc[p.Left],p.Right[0])] = [dicc[p.Right[1]]]
-        else:
-            transitions[(dicc[p.Left],p.Right[0])] = [n]
-        
+        try:
+            if len(p.Right) > 1:
+                transitions[(dicc[p.Left],p.Right[0])].append(dicc[p.Right[1]])
+            else:
+                transitions[(dicc[p.Left],p.Right[0])].append(n)
+
+        except KeyError:
+            if len(p.Right) > 1:
+                transitions[(dicc[p.Left],p.Right[0])] = [dicc[p.Right[1]]]
+            else:
+                transitions[(dicc[p.Left],p.Right[0])] = [n]
+            
+
         if p.Left == g.startSymbol and p.Right.IsEpsilon:
             finals.append(dicc[p.Left])
-    
     sol = NFA(states, finals, transitions)
 
     return sol
