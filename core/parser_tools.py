@@ -342,6 +342,10 @@ def is_regular_grammar(G: Grammar):
                 break
     return answer
 
+def convert_to_nfa(G: Grammar):
+    g = lambda_productions(G)
+    
+
 
 def Remove_Useless_Productions(Grammar):
     visited = []
