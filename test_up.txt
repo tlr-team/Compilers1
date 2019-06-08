@@ -1,0 +1,4 @@
+S --> abS | abA | abB
+A --> cd
+B --> aB
+C --> dc

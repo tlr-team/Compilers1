@@ -1,4 +1,4 @@
-from itertools import islice
+from itertools import islice, compress, product
 from .grammar import NonTerminal, Grammar, Sentence, SentenceList
 
 
@@ -167,7 +167,7 @@ def compute_follows(G, firsts):
 
 
 def get_new_nonterminal(nt_father, suffix, G):
-    return NonTerminal("{0}\'".format(nt_father), G)
+    return NonTerminal("{0}'".format(nt_father), G)
 
 
 def production_begin_ntj(nt_ordered, curr_i, body):
@@ -262,9 +262,11 @@ def remove_left_rec(G: Grammar):
 def useless_productions(G: Grammar):
     visited = [G.startSymbol]
     queue = [G.startSymbol]
+    # productions_to_delete = [G.Productions[:]]
     while queue:
         cur_nt = queue.pop()
         for p in cur_nt.productions:
+            # productions_to_delete.remove(p)
             for sym in p.Right:
                 if sym.IsNonTerminal and sym not in visited:
                     queue.insert(0, sym)
@@ -275,48 +277,53 @@ def useless_productions(G: Grammar):
     return G
 
 
-def next_null_index(body, nulleable, last_index):
-    for i in range(last_index, len(body)):
-        if body[i] in nulleable:
-            return i
-    return None
+def set_all_combinations(production, nulleables):
+    gen_combs = combinations([nt for nt in production.Right if nt in nulleables])
+
+    for comb in gen_combs:
+        body = list(production.Right[:])
+        modified = False
+        for _nt in comb:
+            if _nt in body:
+                modified = True
+                body.remove(_nt)
+        if modified and body:
+            production.Left %= Sentence(*body)
+    return
 
 
-def get_combination(body, indexs, nulleable, comb):
-    comb = str(bin(comb))
-    last_index = 0
-    new_body = []
-
-    for i in range(len(comb) - 1, 1, -1):
-        while last_index not in indexs:
-            new_body.append(body[last_index])
-            last_index += 1
-        if comb[i] == "1":
-            new_body.append(body[last_index])
-        last_index += 1
-    new_body.extend(body[last_index:])
-    return Sentence(*new_body)
-
-
-def add_all_combinations(production, nulleables, G):
-    indexs = [i for i, sym in enumerate(production.Right) if sym in nulleables]
-    for i in range(2 ** len(indexs)):
-        production.Left %= get_combination(production.Right, indexs, nulleables, i)
+def combinations(items):
+    return (set(compress(items, mask)) for mask in product(*[[0, 1]] * len(items)))
 
 
 def lambda_productions(G: Grammar):
     nulleables = [
         nt for nt in G.nonTerminals if any(prod.Right.IsEpsilon for prod in nt.productions)
     ]
-    for p in G.Productions:
-        if all(sym in nulleables for sym in p.Right) and p.Left not in nulleables:
-            nulleables.append(p.Left)
+
+    changes = True
+    while changes:
+        changes = False
+        for nt in G.nonTerminals:
+            if (
+                any(
+                    prod.Right.IsEpsilon or all(sym in nulleables for sym in prod.Right)
+                    for prod in nt.productions
+                )
+                and nt not in nulleables
+            ):
+                changes = True
+                nulleables.append(nt)
+
+    for p in G.Productions[:]:
+        if any(s in nulleables for s in p.Right):
+            set_all_combinations(p, nulleables)
 
     for p in G.Productions:
-        if any(n in p.Right for n in nulleables):
-            add_all_combinations(p, nulleables, G)
-
+        if p.Right.IsEpsilon:
+            G.Remove_Production(p)
     return G
+
 
 def is_regular_grammar(G: Grammar):
     answer = True
@@ -335,6 +342,7 @@ def is_regular_grammar(G: Grammar):
                 break
     return answer
 
+
 def Remove_Useless_Productions(Grammar):
     visited = []
     Incomming = []
@@ -346,7 +354,7 @@ def Remove_Useless_Productions(Grammar):
 
     Incomming.append(initial)
 
-    while(len(Incomming) > 0):
+    while len(Incomming) > 0:
         t = Incomming.pop()
         if not t in visited:
             visited.append(t)
@@ -354,36 +362,34 @@ def Remove_Useless_Productions(Grammar):
                 if prod.Left == t:
                     for i in prod.Right:
                         if i.IsNonTerminal and i not in visited and i not in Incomming:
-                            Incomming.append(i)           
+                            Incomming.append(i)
 
     for i in Grammar.nonTerminals:
         if i not in visited:
             bads.append(i)
 
-    print("bads",bads)
+    print("bads", bads)
 
-    
-    
+    # construir la gramatica
 
-    #construir la gramatica
 
 def Remove_Bads_Productions(Grammar):
     dicc = {}
 
     for t in Grammar.terminals:
         dicc[t] = True
-    
+
     for nt in Grammar.nonTerminals:
         dicc[nt] = False
 
-    #dicc['epsilon'] = True
-    #dicc['e'] = True
+    # dicc['epsilon'] = True
+    # dicc['e'] = True
 
     changed = True
 
     print(dicc)
-    
-    while(changed):
+
+    while changed:
         changed = False
         for prod in Grammar.Productions:
             for i in prod.Right:
