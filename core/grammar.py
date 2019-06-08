@@ -321,15 +321,22 @@ class Grammar:
 
         production.Left.productions.remove(production)
         self.Productions.remove(production)
+        
 
     def Remove_Symbol(self, symbol):
 
         assert isinstance(symbol, Symbol)
-
+        if self.startSymbol == symbol:
+            self.symbDict = {}
+            self.startSymbol = None
+            self.terminals = []
+            self.nonTerminals = []
+            self.Productions = []
+            return
         if symbol.IsEpsilon:  # TODO: What i have to do???
             return
         to_delete = self.nonTerminals[:] + self.terminals[:]
-        for prod in self.Productions:
+        for prod in self.Productions[:]:
             if prod.Left == symbol or symbol in prod.Right:
                 self.Remove_Production(prod)
             else:
@@ -341,6 +348,8 @@ class Grammar:
                 self.terminals.remove(sym)
             else:
                 self.nonTerminals.remove(sym)
+            del self.symbDict[sym.Name]
+            
         return
 
     def Terminal(self, name):

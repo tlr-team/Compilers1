@@ -261,18 +261,32 @@ def remove_left_rec(G: Grammar):
 
 def useless_productions(G: Grammar):
     visited = [G.startSymbol]
-    queue = [G.startSymbol]
-    # productions_to_delete = [G.Productions[:]]
-    while queue:
-        cur_nt = queue.pop()
+    finalize = [*G.terminals]
+    stack = [G.startSymbol]
+
+    while stack:
+        cur_nt = stack.pop()
+        if cur_nt.IsTerminal: continue
+
         for p in cur_nt.productions:
-            # productions_to_delete.remove(p)
             for sym in p.Right:
-                if sym.IsNonTerminal and sym not in visited:
-                    queue.insert(0, sym)
+                if sym not in visited:
+                    stack.append(sym)
                     visited.append(sym)
+    
+    for nt in G.nonTerminals[:]:
+        if nt not in visited and nt in G.nonTerminals:
+            G.Remove_Symbol(nt)
+    changes = True
+    while changes:
+        changes = False
+        for nt in G.nonTerminals:
+            if any(all(s in finalize for s in prod.Right) for prod in nt.productions) and nt not in finalize:
+                changes = True
+                finalize.append(nt)
+
     for nt in G.nonTerminals:
-        if nt not in visited:
+        if nt not in finalize and nt:
             G.Remove_Symbol(nt)
     return G
 
@@ -305,20 +319,14 @@ def lambda_productions(G: Grammar):
     while changes:
         changes = False
         for nt in G.nonTerminals:
-            if (
-                any(
-                    prod.Right.IsEpsilon or all(sym in nulleables for sym in prod.Right)
-                    for prod in nt.productions
-                )
-                and nt not in nulleables
-            ):
+            if any(prod.Right.IsEpsilon or all(sym in nulleables for sym in prod.Right) for prod in nt.productions) and nt not in nulleables:
                 changes = True
                 nulleables.append(nt)
 
     for p in G.Productions[:]:
         if any(s in nulleables for s in p.Right):
             set_all_combinations(p, nulleables)
-
+    
     for p in G.Productions:
         if p.Right.IsEpsilon:
             G.Remove_Production(p)
