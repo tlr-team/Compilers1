@@ -31,3 +31,4 @@ f.write(nfa._repr_svg_())
 f.close()
 
 print(nfa)
+print(nfa.regexs)

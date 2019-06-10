@@ -10,6 +10,7 @@ class NFA:
         self.map = transitions
         self.vocabulary = set()
         self.transitions = { state: {} for state in range(states) }
+        self.regexs = {}
         
         for (origin, symbol), destinations in transitions.items():
             assert hasattr(destinations, '__iter__'), 'Invalid collection of states'
@@ -17,6 +18,19 @@ class NFA:
             self.vocabulary.add(symbol)
             
         self.vocabulary.discard('')
+
+        for org in self.transitions:
+            for symb in self.transitions[org]:
+                for dest in self.transitions[org][symb]:
+                    try:
+                        self.regexs[(org,dest)] += "|" + str(symb)
+                    except KeyError:
+                        self.regexs[(org,dest)] = str(symb)
+
+        for key in self.regexs.keys():
+            if len(self.regexs[key]) > 1:
+                self.regexs[key] = "( " + self.regexs[key] + " )"
+ 
         
     def epsilon_transitions(self, state):
         assert state in self.transitions, 'Invalid state'
