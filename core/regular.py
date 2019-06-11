@@ -77,7 +77,7 @@ def regex_expand(regexs: dict):
 
     return news
 
-def get_regex(N: NFA):
+def regex_from_nfa(N: NFA):
     regexs = regex_expand(N.regexs)
 
     while(len(regexs.keys()) != 1):
