@@ -32,3 +32,4 @@ f.close()
 
 print(nfa)
 print(nfa.regexs)
+print(regex_state_remove(nfa.regexs,1))

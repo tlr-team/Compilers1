@@ -8,4 +8,4 @@ from .parser_tools import (
 )
 from .grammar import *
 
-from .regular import convert_to_nfa
+from .regular import convert_to_nfa,regex_state_remove
