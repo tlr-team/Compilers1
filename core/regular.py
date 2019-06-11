@@ -37,32 +37,42 @@ def convert_to_nfa(G: Grammar):
 
     return sol
 
-def regex_state_remove(regex: dict, state: int):
+def regex_state_remove(regexs: dict, state: int):
     predecesores = {}
     sucesores = {}
     ciclo = ""
     for (a,b) in regexs.keys():
         if a == state and b != state:
-            sucesores[b] = N.regexs[(a,b)]
+            sucesores[b] = regexs[(a,b)]
         elif b == state and a != state:
-            predecesores[a] = N.regexs[(a,b)]
+            predecesores[a] = regexs[(a,b)]
         elif a == b == state:
-            ciclo = N.regexs[(a,b)]
+            ciclo = regexs[(a,b)]
 
     ciclo = ciclo + "*" if ciclo != "" else ""
 
     for pred in predecesores.keys():
         for suc in sucesores.keys():
             try:
-                N.regexs[(pred,suc)] +=  "|" + "( " + predecesores[pred] + ciclo + sucesores[suc] + " )"
+                regexs[(pred,suc)] +=  "|" + "( " + predecesores[pred] + ciclo + sucesores[suc] + " )"
             except KeyError:
-                N.regexs[(pred,suc)] = predecesores[pred] + ciclo + sucesores[suc]
+                regexs[(pred,suc)] = predecesores[pred] + ciclo + sucesores[suc]
 
     news = {}
-    for (a,b) in N.regexs.keys():
+    for (a,b) in regexs.keys():
         if a != state and b != state:
             d = a if a < state else a-1
             e = b if b < state else b-1
-            news[(d,e)] = N.regexs[(a,b)]
+            news[(d,e)] = regexs[(a,b)]
+
+    return news
+
+def regex_expand(regexs: dict):
+    news = {}
+
+    for (a,b) in regexs.keys():
+        news[(a+1,b+1)] = regexs[(a,b)]
+    
+    news[(0,1)] = ""
 
     return news
