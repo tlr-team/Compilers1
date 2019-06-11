@@ -23,7 +23,7 @@ class NFA:
             for symb in self.transitions[org]:
                 for dest in self.transitions[org][symb]:
                     try:
-                        self.regexs[(org,dest)] += "|" + str(symb)
+                        self.regexs[(org,dest)] += " | " + str(symb)
                     except KeyError:
                         self.regexs[(org,dest)] = str(symb)
 
