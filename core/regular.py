@@ -54,7 +54,7 @@ def regex_state_remove(regexs: dict, state: int):
     for pred in predecesores.keys():
         for suc in sucesores.keys():
             try:
-                regexs[(pred,suc)] +=  " | " + "( " + predecesores[pred] + ciclo + "( " + sucesores[suc] + " )" + " )"
+                regexs[(pred,suc)] = "( " + regexs[(pred,suc)] + " | " + "( " + predecesores[pred] + ciclo + "( " + sucesores[suc] + " )" + " )" +" )"
             except KeyError:
                 regexs[(pred,suc)] = predecesores[pred] + ciclo + sucesores[suc]
 
@@ -64,6 +64,8 @@ def regex_state_remove(regexs: dict, state: int):
             d = a if a < state else a-1
             e = b if b < state else b-1
             news[(d,e)] = regexs[(a,b)]
+
+    print(news)
 
     return news
 
@@ -83,4 +85,4 @@ def regex_from_nfa(N: NFA):
     while(len(regexs.keys()) != 1):
         regexs = regex_state_remove(regexs,1)
 
-    return regexs
+    return regexs[(0,2)]

@@ -1,5 +1,5 @@
 from itertools import islice, compress, product
-from .grammar import NonTerminal, Grammar, Sentence, SentenceList
+from .grammar import NonTerminal, Grammar, Sentence, SentenceList, Production
 
 
 class ContainerSet:
@@ -414,3 +414,30 @@ def Remove_Bads_Productions(Grammar):
                     changed = True
 
     print(dicc)
+
+def Remove_Unit_Productions(G: Grammar):
+    unit_prodution_free = []
+    unit_productions = []
+
+    for prod in G.Productions:
+        if len(prod.Right) == 1 and prod.Right[0].IsNonTerminal:
+            unit_productions.append(prod)
+        else:
+            unit_prodution_free.append(prod)
+
+    for up in unit_productions:
+        right = up.Right[0]
+        for nup in unit_prodution_free:
+            if nup.Left == right:
+                nprod = Production(up.Left,nup.Right)
+                for p in unit_prodution_free:
+                    if p == nprod:
+                        break
+                else:
+                    unit_prodution_free.append(nprod)
+
+    G.Productions = unit_prodution_free
+    return G
+    
+
+
