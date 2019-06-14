@@ -18,7 +18,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>images/Qt.ico</normaloff>images/Qt.ico</iconset>
+    <normaloff>../../CompUI/images/Qt.ico</normaloff>../../CompUI/images/Qt.ico</iconset>
   </property>
   <property name="tabShape">
    <enum>QTabWidget::Rounded</enum>
@@ -35,8 +35,14 @@
         <bold>false</bold>
        </font>
       </property>
+      <property name="cursor">
+       <cursorShape>IBeamCursor</cursorShape>
+      </property>
+      <property name="mouseTracking">
+       <bool>false</bool>
+      </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tabGrammar">
        <attribute name="title">
@@ -52,6 +58,9 @@
             <weight>75</weight>
             <bold>true</bold>
            </font>
+          </property>
+          <property name="cursor" stdset="0">
+           <cursorShape>IBeamCursor</cursorShape>
           </property>
           <property name="plainText">
            <string/>
@@ -156,7 +165,7 @@
   <action name="actionNewGrammar">
    <property name="icon">
     <iconset>
-     <normaloff>images/ui-tab--plus.png</normaloff>images/ui-tab--plus.png</iconset>
+     <normaloff>../../CompUI/images/ui-tab--plus.png</normaloff>../../CompUI/images/ui-tab--plus.png</iconset>
    </property>
    <property name="text">
     <string>Nueva Gramática</string>
@@ -171,7 +180,7 @@
   <action name="actionSaveGrammar">
    <property name="icon">
     <iconset>
-     <normaloff>images/disk.png</normaloff>images/disk.png</iconset>
+     <normaloff>../../CompUI/images/disk.png</normaloff>../../CompUI/images/disk.png</iconset>
    </property>
    <property name="text">
     <string>Guardar Gramática</string>
@@ -186,7 +195,7 @@
   <action name="actionLoadGrammar">
    <property name="icon">
     <iconset>
-     <normaloff>images/blue-folder-open-document.png</normaloff>images/blue-folder-open-document.png</iconset>
+     <normaloff>../../CompUI/images/blue-folder-open-document.png</normaloff>../../CompUI/images/blue-folder-open-document.png</iconset>
    </property>
    <property name="text">
     <string>Cargar Gramática</string>
@@ -201,7 +210,7 @@
   <action name="actionExit">
    <property name="icon">
     <iconset>
-     <normaloff>images/arrow-000.png</normaloff>images/arrow-000.png</iconset>
+     <normaloff>../../CompUI/images/arrow-000.png</normaloff>../../CompUI/images/arrow-000.png</iconset>
    </property>
    <property name="text">
     <string>Salir</string>
@@ -213,7 +222,7 @@
   <action name="actionHowToUse">
    <property name="icon">
     <iconset>
-     <normaloff>images/lifebuoy.png</normaloff>images/lifebuoy.png</iconset>
+     <normaloff>../../CompUI/images/lifebuoy.png</normaloff>../../CompUI/images/lifebuoy.png</iconset>
    </property>
    <property name="text">
     <string>¿Cómo usar?</string>
@@ -225,7 +234,7 @@
   <action name="actionAboutAuthor">
    <property name="icon">
     <iconset>
-     <normaloff>images/question.png</normaloff>images/question.png</iconset>
+     <normaloff>../../CompUI/images/question.png</normaloff>../../CompUI/images/question.png</iconset>
    </property>
    <property name="text">
     <string>Acerca del autor</string>
@@ -234,7 +243,7 @@
   <action name="actionAboutGrammarAnalyser">
    <property name="icon">
     <iconset>
-     <normaloff>images/question.png</normaloff>images/question.png</iconset>
+     <normaloff>../../CompUI/images/question.png</normaloff>../../CompUI/images/question.png</iconset>
    </property>
    <property name="text">
     <string>Acerca de Grammar Analyser</string>
@@ -243,7 +252,7 @@
   <action name="actionSaveGrammarAs">
    <property name="icon">
     <iconset>
-     <normaloff>images/disk--pencil.png</normaloff>images/disk--pencil.png</iconset>
+     <normaloff>../../CompUI/images/disk--pencil.png</normaloff>../../CompUI/images/disk--pencil.png</iconset>
    </property>
    <property name="text">
     <string>Guardar Gramática Como ...</string>
@@ -251,11 +260,14 @@
    <property name="statusTip">
     <string>Guardar Gramática Como</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+S</string>
+   </property>
   </action>
   <action name="actionAnalyse">
    <property name="icon">
     <iconset>
-     <normaloff>images/control.png</normaloff>images/control.png</iconset>
+     <normaloff>../../CompUI/images/control.png</normaloff>../../CompUI/images/control.png</iconset>
    </property>
    <property name="text">
     <string>Analizar</string>
@@ -278,7 +290,7 @@
   <action name="actionQuickAnalyse">
    <property name="icon">
     <iconset>
-     <normaloff>images/controlx2.png</normaloff>images/controlx2.png</iconset>
+     <normaloff>../../CompUI/images/controlx2.png</normaloff>../../CompUI/images/controlx2.png</iconset>
    </property>
    <property name="text">
     <string>Análisis rápido</string>
