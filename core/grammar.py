@@ -220,7 +220,7 @@ class Production(object):
         return "%s := %s" % (self.Left, self.Right)
 
     def __repr__(self):
-        return "%s -> %s" % (self.Left, self.Right)
+        return "%s --> %s" % (self.Left, self.Right)
 
     def __iter__(self):
         yield self.Left
@@ -248,7 +248,7 @@ class AttributeProduction(Production):
         return "%s := %s" % (self.Left, self.Right)
 
     def __repr__(self):
-        return "%s -> %s" % (self.Left, self.Right)
+        return "%s --> %s" % (self.Left, self.Right)
 
     def __iter__(self):
         yield self.Left
@@ -390,7 +390,11 @@ class Grammar:
         ans += str(self.Productions)
 
         return ans
-
+    
+    @property
+    def plain_productions(self):
+        ans = "\n".join(str(p) for p in self.Productions)# TODO: testing
+    
     @property
     def to_json(self):
 
