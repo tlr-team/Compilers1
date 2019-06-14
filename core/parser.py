@@ -49,6 +49,8 @@ def parse_to_grammar(lines):
     terminals = []
 
     for line in lines:
+        if line.strip() in ('\n', ''): continue
+            
         sub_epsilon = re.sub(r"epsilon", "e", line)
         without_endline = re.sub(r"\n", "", sub_epsilon).strip()
         without_spaces = re.sub(r"\| | \| | \|", "|", without_endline)
