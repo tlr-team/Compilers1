@@ -300,6 +300,9 @@ class Grammar:
 
         ans = tuple((self.NonTerminal(x) for x in names.strip().split()))
 
+        if len(ans) == 1:
+            ans = ans[0]
+
         return ans
 
     def Add_Production(self, production):
@@ -321,7 +324,6 @@ class Grammar:
 
         production.Left.productions.remove(production)
         self.Productions.remove(production)
-        
 
     def Remove_Symbol(self, symbol):
 
@@ -349,7 +351,7 @@ class Grammar:
             else:
                 self.nonTerminals.remove(sym)
             del self.symbDict[sym.Name]
-            
+
         return
 
     def Terminal(self, name):
@@ -367,6 +369,9 @@ class Grammar:
 
         ans = tuple((self.Terminal(x) for x in names.strip().split()))
 
+        if len(ans) == 1:
+            ans = ans[0]
+
         return ans
 
     def __str__(self):
@@ -374,27 +379,28 @@ class Grammar:
         mul = "%s, "
 
         ans = "Non-Terminals:\n\t"
+        if self.nonTerminals:
+            nonterminals = mul * (len(self.nonTerminals) - 1) + "%s\n"
 
-        nonterminals = mul * (len(self.nonTerminals) - 1) + "%s\n"
-
-        ans += nonterminals % tuple(self.nonTerminals)
+            ans += nonterminals % tuple(self.nonTerminals)
 
         ans += "Terminals:\n\t"
+        if self.terminals:
 
-        terminals = mul * (len(self.terminals) - 1) + "%s\n"
+            terminals = mul * (len(self.terminals) - 1) + "%s\n"
 
-        ans += terminals % tuple(self.terminals)
+            ans += terminals % tuple(self.terminals)
 
         ans += "Productions:\n\t"
 
         ans += str(self.Productions)
 
         return ans
-    
+
     @property
     def plain_productions(self):
-        ans = "\n".join(str(p) for p in self.Productions)# TODO: testing
-    
+        return "\n".join(repr(p) for p in self.Productions)  # TODO: testing
+
     @property
     def to_json(self):
 
@@ -434,7 +440,11 @@ class Grammar:
 
         for p in data["Productions"]:
             head = p["Head"]
-            dic[head] %= Sentence(*[dic[term] for term in p["Body"]])
+            dic[head] %= (
+                G.Epsilon
+                if p["Body"] in ("epsilon", "e")
+                else Sentence(*[dic[term] for term in p["Body"]])
+            )
 
         return G
 
@@ -480,4 +490,3 @@ class Grammar:
             return self.copy()
 
     # endchange
-
