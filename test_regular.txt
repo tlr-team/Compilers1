@@ -1,3 +1,0 @@
-S --> a B | c D
-B --> z
-D --> 1 | epsilon 

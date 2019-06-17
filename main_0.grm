@@ -1,0 +1,1 @@
+{"NonTerminals": ["S", "A", "B"], "Terminals": ["a", "b"], "Productions": [{"Head": "S", "Body": ["a", "A"]}, {"Head": "S", "Body": ["b", "B"]}, {"Head": "A", "Body": ["b", "A"]}, {"Head": "B", "Body": ["epsilon"]}, {"Head": "B", "Body": ["a"]}]}

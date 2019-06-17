@@ -7,5 +7,4 @@ from .parser_tools import (
     is_regular_grammar,
 )
 from .grammar import *
-
 from .regular import convert_to_nfa

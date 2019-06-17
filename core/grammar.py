@@ -220,7 +220,10 @@ class Production(object):
         return "%s := %s" % (self.Left, self.Right)
 
     def __repr__(self):
-        return "%s --> %s" % (self.Left, self.Right)
+        return "%s --> %s" % (
+            self.Left,
+            self.Right.Grammar.Epsilon if self.Right.IsEpsilon else self.Right,
+        )
 
     def __iter__(self):
         yield self.Left
@@ -442,7 +445,7 @@ class Grammar:
             head = p["Head"]
             dic[head] %= (
                 G.Epsilon
-                if p["Body"] in ("epsilon", "e")
+                if p["Body"][0] in ("epsilon", "e")
                 else Sentence(*[dic[term] for term in p["Body"]])
             )
 

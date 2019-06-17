@@ -1,0 +1,1 @@
+{"NonTerminals": ["S", "B"], "Terminals": ["b", "a"], "Productions": [{"Head": "S", "Body": ["b"]}, {"Head": "B", "Body": ["a"]}]}

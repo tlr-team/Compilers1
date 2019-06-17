@@ -1,3 +1,0 @@
-S -->  S s| s d A|d s B  
-A -->B s d | epsilon 
-B --> A s f

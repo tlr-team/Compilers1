@@ -47,49 +47,52 @@ def parse_to_grammar(lines):
     productions = {}
     non_terminals = []
     terminals = []
+    try:
+        for line in lines:
+            if line.strip() in ("\n", ""):
+                continue
 
-    for line in lines:
-        if line.strip() in ('\n', ''): continue
-            
-        sub_epsilon = re.sub(r"epsilon", "e", line)
-        without_endline = re.sub(r"\n", "", sub_epsilon).strip()
-        without_spaces = re.sub(r"\| | \| | \|", "|", without_endline)
-        head, prods = [i.strip() for i in re.split(r"-->", without_spaces, 1)]
+            sub_epsilon = re.sub(r"epsilon", "e", line)
+            without_endline = re.sub(r"\n", "", sub_epsilon).strip()
+            without_spaces = re.sub(r"\| | \| | \|", "|", without_endline)
+            head, prods = [i.strip() for i in re.split(r"-->", without_spaces, 1)]
 
-        head = head.strip()
-        prods = prods.strip()
+            head = head.strip()
+            assert all( c not in head for c in " -\t"), "bad format"
+            prods = prods.strip()
 
-        if head not in non_terminals:
-            non_terminals.append(head)
+            if head not in non_terminals:
+                non_terminals.append(head)
 
-        cur_prods = []
-        for prod in re.split(r"\|", prods):
-            if prod != "":
-                pass
-            cur_prods.append([symbol for symbol in re.split(r" ", prod) if symbol != ""])
+            cur_prods = []
+            for prod in re.split(r"\|", prods):
+                if prod != "":
+                    pass
+                cur_prods.append([symbol for symbol in re.split(r" ", prod) if symbol != ""])
 
-        try:
-            productions[head]
-        except KeyError:
-            productions[head] = []
-        productions[head].extend(cur_prods)
+            try:
+                productions[head]
+            except KeyError:
+                productions[head] = []
+            productions[head].extend(cur_prods)
 
-    prods = (prod for p_list in productions.values() for prod in p_list)
-    for prod in prods:
-        for sym in prod:
-            if (
-                sym not in terminals
-                and sym not in non_terminals
-                and get_symbol_name(sym) != "epsilon"
-            ):
-                terminals.append(sym)
+        prods = (prod for p_list in productions.values() for prod in p_list)
+        for prod in prods:
+            for sym in prod:
+                if (
+                    sym not in terminals
+                    and sym not in non_terminals
+                    and get_symbol_name(sym) != "epsilon"
+                ):
+                    terminals.append(sym)
 
-    G = Grammar()
-    script = build_script(terminals, non_terminals, productions)
-    print(script)
-    exec(script, {"G": G, "__name__": __name__}, {})
-
-    return G
+        G = Grammar()
+        script = build_script(terminals, non_terminals, productions)
+        print(script)
+        exec(script, {"G": G, "__name__": __name__}, {})
+        return G
+    except:
+        return None
 
 
 def get_symbol_name(symbol: str, on_production=False):
@@ -112,19 +115,24 @@ def get_symbol_name(symbol: str, on_production=False):
 
 def get_symbols_assignament(terminals, non_terminals):
     # distinguish
-    sentence_dist = "{0} = G.NonTerminal('{1}', True)\n".format(non_terminals[0], non_terminals[0])
+    sentence_dist = (
+        ""
+        if not non_terminals
+        else "{0} = G.NonTerminal('{1}', True)\n".format(non_terminals[0], non_terminals[0])
+    )
 
     # non terminals
-    to_assign = ", ".join(
-        map(get_symbol_name, non_terminals[1:])
-    )  # except the distiguish (first one)
+    to_assign = ", ".join(map(get_symbol_name, non_terminals[1:]))
+    # except the distiguish (first one)
     arg = " ".join(non_terminals[1:])
-    sentence_nt = "{0} = G.NonTerminals('{1}')\n".format(to_assign, arg)
+    sentence_nt = (
+        "" if not non_terminals[1:] else "{0} = G.NonTerminals('{1}')\n".format(to_assign, arg)
+    )
 
     # terminals
     to_assign = ", ".join(map(get_symbol_name, terminals))
     arg = " ".join(terminals)
-    sentence_t = "{0} = G.Terminals('{1}')\n\n".format(to_assign, arg)
+    sentence_t = "" if not terminals else "{0} = G.Terminals('{1}')\n\n".format(to_assign, arg)
 
     return sentence_dist + sentence_nt + sentence_t
 

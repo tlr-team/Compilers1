@@ -1,6 +1,6 @@
-from core.grammar import Grammar
-from core.parser_tools import lambda_productions,useless_productions
-from core.automaton import NFA
+from .grammar import Grammar
+from .parser_tools import lambda_productions,useless_productions
+from .automaton import NFA
 
 def convert_to_nfa(G: Grammar):
     t = lambda_productions(G)
