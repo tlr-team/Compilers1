@@ -1,0 +1,8 @@
+S --> a B
+S --> c D
+S --> d S
+S --> f S
+B --> z
+B --> k B
+B --> s S
+D --> 1
