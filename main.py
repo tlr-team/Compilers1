@@ -1,10 +1,15 @@
-# from tkinter import DISABLED, END, NORMAL, Button, E, Entry, Label, StringVar, Tk, W
+import gc
+
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QFileDialog, QDialog, QMessageBox
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtSvg import QSvgWidget, QSvgRenderer
-from mainwindow import Ui_MainWindow
-import core
+from PyQt5.QtCore import QCoreApplication, pyqtSlot
+from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox
+
+import parse_input
+import parsers
+import regex
+
+from grammar import Grammar
+from UI import Ui_MainWindow
 
 
 class GramarUI(Ui_MainWindow):
@@ -15,21 +20,8 @@ class GramarUI(Ui_MainWindow):
         # vars
         self.grammar = None
         self.current_filename = None
-        self.svg_img = None
         #
         self.associate_actions()
-
-    def _dialog(self, s, icon):
-        dlg = QMessageBox(self)
-        dlg.setText(s)
-        dlg.setIcon(icon)
-        dlg.show()
-
-    def dialog_critical(self, s):
-        self._dialog(s, QMessageBox.Critical)
-
-    def dialog_warning(self, s):
-        self._dialog(s, QMessageBox.Warning)
 
     def associate_actions(self):
         self.actionLoadGrammar.triggered.connect(self.load_grammar)
@@ -40,26 +32,15 @@ class GramarUI(Ui_MainWindow):
         self.buttonAskBelongs.clicked.connect(self.ask_belongs)
         # self.actionExit.triggered.connect(None)
 
-    def ask_belongs(self):
-        self.label_belong_result.setText("Pertenece")  # porque si XD
-
-    def show_svg(self, widget: QtWidgets.QWidget = None):
-        svg_bytes = bytearray(self.svg_img, encoding="utf-8")
-        svgWidget = QSvgWidget(widget if widget else self.tabAutomaton)
-        svgWidget.renderer().load(svg_bytes)
-        width = int(self.svg_img.split('width="', 1)[1].split('"', 1)[0])
-        height = int(self.svg_img.split('height="', 1)[1].split('"', 1)[0])
-        width = min(widget.width(), width)
-        height = min(widget.height(), height)
-        svgWidget.setGeometry(0, 0, width, height)
-        svgWidget.show()
-
     def _load_grammar(self, file_name: str):
         self.current_filename = file_name
         with open(file_name, "r") as file:
             try:
-                self.grammar = core.Grammar.from_json(file.read())
+                self.grammar = Grammar.from_json(file.read())
                 self.textEditGrammar.setPlainText(self.grammar.plain_productions)
+                if self.tabs_automatons:
+                    self._close_all_automatons()
+
             except:
                 self.dialog_warning("Ocurrió un error al cargar el archivo.")
         return
@@ -72,11 +53,10 @@ class GramarUI(Ui_MainWindow):
         )
         if not grm_path or not os.path.exists(grm_path):
             return
-        print(grm_path)
+        # print(grm_path)
         self._load_grammar(grm_path)
 
     def _save_grammar_at(self, file_name):
-        print(file_name)
         if self.grammar is None:
             self.analyse()
         if not self.grammar is None:
@@ -110,32 +90,153 @@ class GramarUI(Ui_MainWindow):
 
     def new_grammar(self):
         self.grammar = None
-        self.svg_img = None
         self.current_filename = None
         # clear results and grammar
         self.textResults.setPlainText("")
         self.textEdit_input_belongs.setPlainText("")
         self.textEditGrammar.setPlainText("")
         self.label_belong_result.setText("")
+
+        self._close_all_automatons()
         return
 
     def analyse(self):
         if not self.textEditGrammar.toPlainText():
             return
+        if self.tabs_automatons:
+            self._close_all_automatons()
+
         raw_grammar = str(self.textEditGrammar.toPlainText())
-        self.grammar = core.parse_to_grammar(raw_grammar.split("\n"))
-        res = self.get_results()  # processing grammar stuff
+        self.grammar = parse_input.parse_to_grammar(raw_grammar.split("\n"))
+        res = self.get_results()
         self.tabWidget.setCurrentIndex(2)
         self.textResults.setPlainText(res)
-        if self.svg_img:
-            self.show_svg()
 
-    def get_results(self):
-        res = "resultados:\n"
-        res += str(self.grammar) if self.grammar else "Wrong Sintax..."
-        # set or unset svg str
-        # self.svg_img = ""
+        for parser_name, svg_str in self.svg_imgs:
+            self.create_svg_slot(parser_name, svg_str)
+
+    ############## Word Belongs ##############
+    def ask_belongs(self):
+        word = self.textEdit_input_belongs.toPlainText().strip("\n \t")
+        res_belongs = self.get_belongs_info(word)
+        self.label_belong_result.setText(res_belongs)
+
+    def get_belongs_info(self, word):
+        if not self.grammar:
+            return "Gramática no entrada o sin analizar..."
+        res = "RESULTADOS:\n"
+
+        for meth_name in GramarUI.__dict__:
+            if meth_name.endswith("_belongs_results") and callable(getattr(GramarUI, meth_name)):
+                valid, _info = GramarUI.__dict__[meth_name](self, word)
+                res += str(_info) + "\n" if valid else ""  # TODO: fix format correctly
         return res
+
+    def _regex_belongs_results(self, word):
+        try:
+            self.regex  # TODO: Pending to implementation
+            assert not self.regex.parse_corrupted
+        except:
+            return False, None
+        return True, self.regex(word)  # TODO: Pending to implementation
+
+    def _ll1_belongs_results(self, word):
+        try:
+            self.ll1
+            assert not self.ll1.parse_corrupted
+        except:
+            return False, None
+        return True, self.ll1(word)
+
+    def _lr_belongs_results(self, word):
+        try:
+            self.lr
+            assert not self.lr.parse_corrupted
+        except:
+            return False, None
+        return True, self.lr(word)
+
+    def _lalr_belongs_results(self, word):
+        try:
+            self.lalr
+            assert not self.lalr.parse_corrupted
+        except:
+            return False, None
+        return True, self.lalr(word)
+
+    def _slr_belongs_results(self, word):
+        try:
+            self.slr
+            assert not self.slr.parse_corrupted
+        except:
+            return False, None
+        return True, self.slr(word)
+
+    ############## End Word Belongs ##############
+
+    ############## Parser Results ##############
+    def get_results(self):
+        if not self.grammar:
+            return "Sintáxis de gramática incorrecta..."
+        res = "RESULTADOS:\n"
+
+        res += str(self.grammar) + "\n"
+
+        # reducciones de gramaticas firsts and follows
+        res += self._get_metainfo()
+
+        self.svg_imgs = []
+
+        # info and automatons for every parser method who match
+        for meth_name in GramarUI.__dict__:
+            if meth_name.endswith("_parser_results") and callable(getattr(GramarUI, meth_name)):
+                _info, _aut = GramarUI.__dict__[meth_name](self)
+                res += _info + "\n" + (30 * "-") + "\n"
+                if _aut:
+                    self.svg_imgs.append((meth_name.split("_parser_results")[0].strip("_"), _aut))
+        return res
+
+    def _get_metainfo(self):
+        firsts = parsers.compute_firsts(self.grammar)
+        follows = parsers.compute_follows(self.grammar, firsts)
+        print(firsts, follows)
+        res = (
+            "firsts: \n\t" + "\n\t".join(str(w) + " > " + str(f) for w, f in firsts.items()) + "\n"
+        )
+        res += (
+            "follows: \n\t"
+            + "\n\t".join(str(w) + " > " + str(f) for w, f in follows.items())
+            + "\n"
+        )
+        # TODO: add the reductions left rec, unit prod, lambda prod,etc
+        return res
+
+    def _regex_parser_results(self):  # ??? is the same as ll1
+        res = (
+            "Es Regular:\n" if parse_input.is_regular_grammar(self.grammar) else "No es Regular:\n"
+        )
+        nfa = regex.convert_to_nfa(self.grammar)
+        self.regex = regex.regex_from_nfa(nfa)
+        res += str(self.regex) + "\n"
+        return res, nfa._repr_svg_()
+
+    def _ll1_parser_results(self):
+        self.ll1 = parsers.LL1(self.grammar)
+        return str(self.ll1), None  # has no graph
+
+    def _lr_parser_results(self):
+        self.lr = parsers.LR1(self.grammar)
+        return str(self.lr), None if self.lr.parse_corrupted else self.lr.automaton.graph()
+
+    def _lalr_parser_results(self):
+        self.lalr = parsers.LALR(self.grammar)
+        return str(self.lalr), None if self.lalr.parse_corrupted else self.lalr.automaton.graph()
+
+    def _slr_parser_results(self):
+        self.slr = parsers.SLR(self.grammar)
+        return str(self.slr), None if self.slr.parse_corrupted else self.slr.automaton.graph()
+
+    ############## End Parser Results ##############
 
 
 if __name__ == "__main__":

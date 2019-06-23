@@ -101,7 +101,9 @@ class Ui_MainWindow(object):
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
         self.toolBar = QtWidgets.QToolBar(MainWindow)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.toolBar.sizePolicy().hasHeightForWidth())
@@ -148,10 +150,16 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Proyecto de Compilación I"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabGrammar), _translate("MainWindow", "Gramática"))
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.tabGrammar), _translate("MainWindow", "Gramática")
+        )
         self.buttonAskBelongs.setText(_translate("MainWindow", "Es reconocido?"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabBelongs), _translate("MainWindow", "Cadenas"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabResults), _translate("MainWindow", "Resultados"))
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.tabBelongs), _translate("MainWindow", "Cadenas")
+        )
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.tabResults), _translate("MainWindow", "Resultados")
+        )
         # self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabAutomaton), _translate("MainWindow", "Autómatas"))
         self.toolBar.setWindowTitle(_translate("MainWindow", "Herramientas"))
         self.actionNewGrammar.setText(_translate("MainWindow", "Nueva Gramática"))
@@ -227,6 +235,7 @@ class Ui_MainWindow(object):
 
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()

@@ -15,7 +15,7 @@ class LL1(Parser):
             X = production.Left
             alpha = production.Right
 
-            if not production.IsEpsilon: # TODO: this 'if' is really necesary?
+            if not production.IsEpsilon:  # TODO: this 'if' is really necesary?
                 for sym in self.firsts[alpha]:
                     is_ll1 &= self._add_transition(table, X, sym.Name, production)
 
@@ -26,12 +26,11 @@ class LL1(Parser):
         self.table = table
         self._parse_corrupted = not is_ll1
 
-    
     def __call__(self, word, verbose=True):
         """
             Parse a word.
         """
-        
+
         stack = [self.startSymbol]
         cursor = 0
         output = []
@@ -67,16 +66,20 @@ class LL1(Parser):
                     break
         except:
             return self.format_recognize([], "parser no disponible")
-        return self.format_recognize(output, info if verbose else '\n' + "\n".join(output))
+        return self.format_recognize(output, info if verbose else "\n" + "\n".join(output))
 
     def format_recognize(self, output: list, info: str):
         return bool(output), info
 
     def _str_conflicts(self):
         return ""
- 
+
     def _str_tables(self):
         str_res = ""
         for X in self.table:
-            str_res += f'\n  {X}:' + '\t'.join(f"\n    [{symb}] -> {vals}{('  (conflicto)') if len(vals) > 1 else ('') }"  for symb, vals in self.table[X].items() if vals)
+            str_res += f"\n  {X}:" + "\t".join(
+                f"\n    [{symb}] -> {vals}{('  (conflicto)') if len(vals) > 1 else ('') }"
+                for symb, vals in self.table[X].items()
+                if vals
+            )
         return str_res
