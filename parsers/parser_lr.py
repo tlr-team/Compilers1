@@ -1,7 +1,6 @@
 from grammar import Grammar, Item, ContainerSet
 from .parser_abstract import Parser, ShiftReduceParser
 from automaton import State
-from tools import conflict_cond_lr1
 from .parser_tools import compute_firsts, compute_follows
 
 
@@ -248,3 +247,7 @@ class LR1(ShiftReduceParser):
 
         return str_res
 
+def conflict_cond_lr1(cell: list):
+    if isinstance(cell, list) and len(cell) in (0, 1):
+        return False
+    return len(cell) > 1 and sum(map(lambda x: 0 if x[0] == LR1.SHIFT else 1, cell)) != 0
