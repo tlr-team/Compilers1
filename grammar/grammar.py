@@ -449,6 +449,10 @@ class Grammar:
 
         return ans
 
+    def tokenize(self, text: list):
+        return [self.symbDict[word] for word in text.split()] + [G.EOF]
+
+
     def __getitem__(self, symbol_name):
         return self.symbDict[symbol_name]
     
