@@ -417,7 +417,7 @@ class Grammar:
             if prod.Left == symbol or symbol in prod.Right:
                 self.Remove_Production(prod)
             else:
-                for s in prod:
+                for s in [prod.Left] + list(prod.Right[:]):
                     if s in to_delete:
                         to_delete.remove(s)
         for sym in to_delete:
@@ -448,6 +448,13 @@ class Grammar:
             ans = ans[0]
 
         return ans
+
+    def __getitem__(self, symbol_name):
+        return self.symbDict[symbol_name]
+    
+    def __setitem__(self, symbol_name, value):
+        assert isinstance(value, Symbol)
+        self.symbDict[symbol_name] = value
 
     def __str__(self):
 

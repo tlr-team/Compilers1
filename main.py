@@ -97,6 +97,7 @@ class GramarUI(Ui_MainWindow):
         self.textEditGrammar.setPlainText("")
         self.label_belong_result.setText("")
 
+        self.tabWidget.setCurrentIndex(0)
         self._close_all_automatons()
         return
 
@@ -113,11 +114,14 @@ class GramarUI(Ui_MainWindow):
         self.textResults.setPlainText(res)
 
         for parser_name, svg_str in self.svg_imgs:
+            assert isinstance(svg_str, str), parser_name
             self.create_svg_slot(parser_name, svg_str)
 
     ############## Word Belongs ##############
     def ask_belongs(self):
-        word = self.textEdit_input_belongs.toPlainText().strip("\n \t")
+        word = self.textEdit_input_belongs.toPlainText().strip("\n \t").split(' ')
+        if self.grammar:
+            word.append(self.grammar.EOF.Name if self.grammar else "$")
         res_belongs = self.get_belongs_info(word)
         self.label_belong_result.setText(res_belongs)
 
@@ -182,7 +186,7 @@ class GramarUI(Ui_MainWindow):
 
         res += str(self.grammar) + "\n"
 
-        # reducciones de gramaticas firsts and follows
+        # reducciones de gramaticas, firsts and follows
         res += self._get_metainfo()
 
         self.svg_imgs = []
@@ -191,9 +195,11 @@ class GramarUI(Ui_MainWindow):
         for meth_name in GramarUI.__dict__:
             if meth_name.endswith("_parser_results") and callable(getattr(GramarUI, meth_name)):
                 _info, _aut = GramarUI.__dict__[meth_name](self)
-                res += _info + "\n" + (30 * "-") + "\n"
+                name = meth_name.split("_parser_results")[0].strip("_")
+                res += "\n" + (20 * "-") + name + (20 * "-") + "\n"
+                res += _info
                 if _aut:
-                    self.svg_imgs.append((meth_name.split("_parser_results")[0].strip("_"), _aut))
+                    self.svg_imgs.append((name, _aut))
         return res
 
     def _get_metainfo(self):
@@ -212,13 +218,16 @@ class GramarUI(Ui_MainWindow):
         return res
 
     def _regex_parser_results(self):  # ??? is the same as ll1
+        is_reg = parse_input.is_regular_grammar(self.grammar)
         res = (
-            "Es Regular:\n" if parse_input.is_regular_grammar(self.grammar) else "No es Regular:\n"
+            "Es Regular:\n" if is_reg else "No es Regular.\n"
         )
-        nfa = regex.convert_to_nfa(self.grammar)
-        self.regex = regex.regex_from_nfa(nfa)
-        res += str(self.regex) + "\n"
-        return res, nfa._repr_svg_()
+        if is_reg:
+            nfa = regex.convert_to_nfa(self.grammar)
+            self.regex = regex.regex_from_nfa(nfa)
+            res += str(self.regex) + "\n"
+            return res, nfa._repr_svg_()
+        return res, None
 
     def _ll1_parser_results(self):
         self.ll1 = parsers.LL1(self.grammar)
@@ -226,15 +235,16 @@ class GramarUI(Ui_MainWindow):
 
     def _lr_parser_results(self):
         self.lr = parsers.LR1(self.grammar)
-        return str(self.lr), None if self.lr.parse_corrupted else self.lr.automaton.graph()
+        return str(self.lr), None if self.lr.parse_corrupted else self.lr.automaton._repr_svg_()
 
     def _lalr_parser_results(self):
         self.lalr = parsers.LALR(self.grammar)
-        return str(self.lalr), None if self.lalr.parse_corrupted else self.lalr.automaton.graph()
+        return str(self.lalr), None # if self.lalr.parse_corrupted else self.lalr.automaton._repr_svg_()
+        return "", None
 
     def _slr_parser_results(self):
         self.slr = parsers.SLR(self.grammar)
-        return str(self.slr), None if self.slr.parse_corrupted else self.slr.automaton.graph()
+        return str(self.slr), None if self.slr.parse_corrupted else self.slr.automaton._repr_svg_()
 
     ############## End Parser Results ##############
 

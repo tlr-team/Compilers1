@@ -198,8 +198,8 @@ class Ui_MainWindow(object):
         svg_bytes = bytearray(svg_img, encoding="utf-8")
         svgWidget = QSvgWidget(widget)
         svgWidget.renderer().load(svg_bytes)
-        width = int(svg_img.split('width="', 1)[1].split('"', 1)[0])
-        height = int(svg_img.split('height="', 1)[1].split('"', 1)[0])
+        width = int(svg_img.split('width="', 1)[1].split('pt', 1)[0])
+        height = int(svg_img.split('height="', 1)[1].split('pt', 1)[0])
         width = min(widget.width(), width)
         height = min(widget.height(), height)
         svgWidget.setGeometry(0, 0, width, height)
@@ -224,11 +224,21 @@ class Ui_MainWindow(object):
         self.show_svg(svg_str, tab)
 
     def _close_all_automatons(self):
-        for tab, _ in self.tabs_automatons.values():
+        count = len(self.tabs_automatons)
+        while count:
+            self.tabWidget.removeTab(self.tabWidget.indexOf(self.tabResults) + count)
+            count -= 1
+        
+        for tab, grid in self.tabs_automatons.values():
+            # grid.close()
+            # grid.deleteLater()
+            # del grid
+
             tab.close()
             tab.deleteLater()
             del tab
 
+        del self.tabs_automatons
         gc.collect()
         self.tabs_automatons = {}
 

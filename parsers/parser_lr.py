@@ -2,7 +2,7 @@ from grammar import Grammar, Item, ContainerSet
 from .parser_abstract import Parser, ShiftReduceParser
 from automaton import State
 from .parser_tools import compute_firsts, compute_follows
-
+from tools import multiline_formatter
 
 class LR0(ShiftReduceParser):
     pass
@@ -21,7 +21,7 @@ class LR1(ShiftReduceParser):
         return [[Item(p, 0, lookaheads)] for p in next_symb.productions]
 
     def _compress(self, items):
-        centers = {}  # TODO: Urgent ?? what am i doing???
+        centers = {}
         for item in items:
             center = item.Center()
             try:
@@ -87,40 +87,9 @@ class LR1(ShiftReduceParser):
 
                 cur_state.add_transition(sym.Name, next_state)
 
-        automaton.set_formatter(lambda state: "\n".join(str(item) for item in state))
+        automaton.set_formatter(multiline_formatter)
         self.automaton = automaton
         return automaton
-
-    def str_tables(self):
-        # TODO: save table
-        str_res = "=" * 10 + "Action" + "=" * 10 + "\n"
-        actionList = list(self.ACTION.items())
-        actionList.sort(key=lambda x: x[0])
-        index, tmp = 0, "I0 ==> "
-        for left, right in actionList:
-            if index == int(left[0]):
-                tmp += " " + left[1] + ": " + right + " | "
-            else:
-                str_res += tmp + "\n"
-                index += 1
-                tmp = "I" + str(index) + " ==> "
-                tmp += " " + left[1] + ": " + right + " | "
-        str_res += tmp + "\n"
-
-        str_res += "=" * 10 + "Goto" + "=" * 10 + "\n"
-        gotoList = list(self.GOTO.items())
-        gotoList.sort(key=lambda x: x[0])
-        index, tmp = 0, "I0 ==> "
-        for left, right in gotoList:
-            if index == int(left[0]):
-                tmp += " " + left[1] + ": " + str(right) + " | "
-            else:
-                str_res += tmp + "\n"
-                index += 1
-                tmp = "I" + str(index) + " ==> "
-                tmp += " " + left[1] + ": " + str(right) + " | "
-        str_res += tmp + "\n"
-        return str_res
 
     def str_conflictive_strings(self):
         return self.Errors
@@ -129,8 +98,9 @@ class LR1(ShiftReduceParser):
         is_lr1 = True
         errors = ""
         for i, node in enumerate(self.automaton):
-            print(i, "\t", "\n\t ".join(str(x) for x in node.state), "\n")
+            # print(i, "\t", "\n\t ".join(str(x) for x in node.state), "\n")
             node.idx = i
+            node.tag = f'I{i}'
 
         for node in self.automaton:
             idx = node.idx
@@ -139,13 +109,13 @@ class LR1(ShiftReduceParser):
                 if item.IsReduceItem:
                     prod = item.production
                     if prod.Left == self.startSymbol:  # estado final
-                        is_lr1 &= self._add_transition(
-                            self.ACTION, idx, self.EOF, (ShiftReduceParser.OK, "")
+                        is_lr1 &= self._register(
+                            self.ACTION, idx, self.EOF.Name, (ShiftReduceParser.OK, "")
                         )
                     else:
                         for lookahead in item.lookaheads:
-                            is_lr1 &= self._add_transition(
-                                self.ACTION, idx, lookahead, (ShiftReduceParser.REDUCE, prod)
+                            is_lr1 &= self._register(
+                                self.ACTION, idx, lookahead.Name, (ShiftReduceParser.REDUCE, prod)
                             )
                             errors += (
                                 self._conflict_on(self.ACTION, idx, lookahead) if not is_lr1 else ""
@@ -155,10 +125,10 @@ class LR1(ShiftReduceParser):
                     next_sym = item.NextSymbol
                     if next_sym.IsTerminal:
                         try:
-                            is_lr1 &= self._add_transition(
+                            is_lr1 &= self._register(
                                 self.ACTION,
                                 idx,
-                                next_sym,
+                                next_sym.Name,
                                 (ShiftReduceParser.SHIFT, node[next_sym.Name][0].idx),
                             )
                             errors += (
@@ -167,85 +137,65 @@ class LR1(ShiftReduceParser):
                         except:
                             is_lr1 = False
                     else:  # nonterminal
-                        is_lr1 &= self._add_transition(
-                            self.GOTO, idx, next_sym, (None, node[next_sym][0].idx)
+                        is_lr1 &= self._register(
+                            self.GOTO, idx, next_sym.Name, node[next_sym.Name][0].idx
                         )
                         errors += self._conflict_on(self.GOTO, idx, next_sym) if not is_lr1 else ""
         self.Errors = errors
         self._parse_corrupted = not is_lr1
+        self.automaton.set_formatter(multiline_formatter)
 
-    def _build_parser(self):
-        assert self.G.IsAugmentedGrammar, "Grammar must be augmented"
-
-        # self.productions.sort(key=lambda x: x.Left.Name)
-
-        # #################################################
-        # ######## Inserting a new distinguish ############
-        # #################################################
-        # Suprime = self.G.NonTerminal("Suprime")
-        # S = self.startSymbol
-        # Suprime %= S
-        # self.productions.insert(0, Suprime.productions[0])
-        # self.startSymbol = Suprime
-        # #################################################
-
-        self._build_automaton()
-        self._build_table()  # TODO: from the scratch
-        return
 
     def format_recognize(self, output: list, info: str):
         return bool(output), info
 
-    def _str_conflicts(self):
-        return self.Errors  # TODO: Conflictives words
+    # def _str_conflicts(self):
+    #     return self.Errors  # TODO: Conflictives words
 
-    def _str_tables(self):
-        str_res = " Action:\n"
-        for X in self.ACTION:
-            str_res += f"\n  State<{X}>:"
-            for symb, vals in self.ACTION[X].items():
-                if vals:
-                    str_res += (
-                        f"\n    [{symb}] -> "
-                        + "["
-                        + " ".join(
-                            (
-                                f"({vals[0]}: State<{val[1]}>) "
-                                if isinstance(val, tuple)
-                                else f"State<{val}>"
-                            )
-                            for val in vals
-                        )
-                        + "]"
-                        + "  (conflicto)"
-                        if conflict_cond_lr1(vals)
-                        else ""
-                    )
-        str_res = "\n Goto:\n"
-        for X in self.GOTO:
-            str_res += f"\n  State<{X}>:"
-            for symb, vals in self.GOTO[X].items():
-                if vals:
-                    str_res += (
-                        f"\n    [{symb}] -> "
-                        + "["
-                        + " ".join(
-                            (
-                                f"({vals[0]}: State<{val[1]}>) "
-                                if isinstance(val, tuple)
-                                else f"State<{val}> "
-                            )
-                            for val in vals
-                        )
-                        + "]"
-                        + "  (conflicto)"
-                        if conflict_cond_lr1(vals)
-                        else ""
-                    )
+    # def _str_tables(self):
+    #     str_res = " Action:"
+    #     for X in self.ACTION:
+    #         str_res += f"\n  State<{X}>:"
+    #         for symb, vals in self.ACTION[X].items():
+    #             if vals:
+    #                 str_res += (
+    #                     f"\n    [{symb}] -> "
+    #                     + "["
+    #                     + ", ".join(
+    #                         (
+    #                             f"{val[0]}: State<{val[1]}>"
+    #                             if val[0] == LR1.SHIFT
+    #                             else (
+    #                                 f"{val[0]}: Prod({repr(val[1])})"
+    #                                 if val[0] == LR1.REDUCE
+    #                                 else f"{val[0]}"
+    #                             )
+    #                         )
+    #                         for val in vals
+    #                     )
+    #                     + "]"
+    #                     + ("  (conflicto)" if conflict_cond_lr1(vals) else "")
+    #                 )
+    #     str_res += "\n\n Goto:"
+    #     for X in self.GOTO:
+    #         str_res += f"\n  State<{X}>:"
+    #         for symb, vals in self.GOTO[X].items():
+    #             if vals:
+    #                 str_res += (
+    #                     f"\n    [{symb}] -> "
+    #                     + "["
+    #                     + ", ".join(
+    #                         (f"State<{val[1]}>" if isinstance(val, tuple) else f"State<{val}> ")
+    #                         for val in vals
+    #                     )
+    #                     + "]"
+    #                     + ("  (conflicto)" if conflict_cond_lr1(vals) else "")
+    #                 )
 
-        str_res += "\n"
+    #     str_res += "\n"
 
-        return str_res
+        # return str_res
+
 
 def conflict_cond_lr1(cell: list):
     if isinstance(cell, list) and len(cell) in (0, 1):

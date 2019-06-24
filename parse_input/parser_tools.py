@@ -133,6 +133,7 @@ def useless_productions(G: Grammar):
 
 def set_all_combinations(production, nulleables):
     gen_combs = combinations([nt for nt in production.Right if nt in nulleables])
+    to_add = []
 
     for comb in gen_combs:
         body = list(production.Right[:])
@@ -142,9 +143,9 @@ def set_all_combinations(production, nulleables):
                 modified = True
                 body.remove(_nt)
         if modified and body:
-            production.Left %= Sentence(*body)
-    return
-
+            to_add.append((production.Left.Name, Sentence(*body)))
+            # G[production.Left.Name] %= Sentence(*body)
+    return to_add
 
 def combinations(items):
     return (set(compress(items, mask)) for mask in product(*[[0, 1]] * len(items)))
@@ -154,6 +155,7 @@ def lambda_productions(G: Grammar):
     nulleables = [
         nt for nt in G.nonTerminals if any(prod.Right.IsEpsilon for prod in nt.productions)
     ]
+    to_add = []
 
     changes = True
     while changes:
@@ -171,7 +173,10 @@ def lambda_productions(G: Grammar):
 
     for p in G.Productions[:]:
         if any(s in nulleables for s in p.Right):
-            set_all_combinations(p, nulleables)
+            to_add.extend(set_all_combinations(p, nulleables))
+
+    for l, r in to_add:
+        G[l] %= r
 
     for p in G.Productions:
         if p.Right.IsEpsilon:

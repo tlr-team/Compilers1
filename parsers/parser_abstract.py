@@ -1,6 +1,7 @@
 from functools import wraps
 from grammar import Grammar
 from .parser_tools import compute_firsts, compute_follows, compute_local_first
+from tools import table_to_dataframe
 
 
 def corrupt_protection(func):
@@ -9,6 +10,7 @@ def corrupt_protection(func):
         if args[0].parse_corrupted:
             return
         return func(*args, **kwargs)
+
     return wrapper
 
 
@@ -76,8 +78,8 @@ class Parser:
         """
         Build table and automaton.
         """
-        self._build_table()
         self._build_automaton()
+        self._build_table()
 
     # ToImplement
     def _build_table(self):
@@ -103,14 +105,14 @@ class Parser:
             This method must be hided for another implementation.
         """
         raise NotImplementedError
-    
+
     def __call__(self, word):
         """
             Parse a word.\n
             `This method must be hided for another implementation`
         """
         raise NotImplementedError
-    
+
     @corrupt_protection
     @property
     def svg_automaton(self):
@@ -119,9 +121,10 @@ class Parser:
             `This method must be hided for another implementation`
         """
         raise NotImplementedError
+
     # EndToImplement
 
-    def _add_transition(self, table, X, sym, val):
+    def _register(self, table, X, sym, val):
         table[X] = table[X] if X in table else {}
         table[X][sym] = table[X][sym] if sym in table[X] else []
 
@@ -139,9 +142,7 @@ class Parser:
         if self.parse_corrupted is None:
             return f"Not initialized {type(self).__name__}"
         elif self._parse_corrupted:
-            return (
-                f"No es {type(self).__name__}: \n{self._str_tables()}\n{self._str_conflicts()}\n"
-            )
+            return f"No es {type(self).__name__}: \n{self._str_tables()}\n{self._str_conflicts()}\n"
         else:
             return f"Es {type(self).__name__}: \n{self._str_tables()}\n"
 
@@ -157,10 +158,9 @@ class ShiftReduceParser(Parser):
         self.CanonicalCollection = []
         self.ACTION = {}
         self.GOTO = {}
-
+        self.errors = ""
         super().__init__(G.AugmentedGrammar(), firsts=firsts, follows=follows)
 
-    @corrupt_protection
     def __call__(self, word, verbose=False):
         """
             Recognize a word or not.
@@ -168,16 +168,17 @@ class ShiftReduceParser(Parser):
         stack = [0]
         pointer = 0
         output = []
-        productions = ""
+        verbosity = ""
 
         while True:
             state = stack[-1]
             lookahead = word[pointer]
             try:
+                assert not self._parse_corrupted
                 action, tag = self.ACTION[state][lookahead][0]
 
                 if verbose:
-                    productions += str(stack) + str(word[pointer:]) + "\n"
+                    verbosity += f"stack: {str(stack)}\n({action}: {repr(tag)}) - ({', '.join(s for s in word[pointer:])})\n\n"
 
                 if action == ShiftReduceParser.SHIFT:
                     stack.append(tag)
@@ -185,17 +186,32 @@ class ShiftReduceParser(Parser):
                 elif action == ShiftReduceParser.REDUCE:
                     for _ in range(len(tag.Right)):
                         stack.pop()
-                    stack.append(self.GOTO[stack[-1]][tag.Left][0])
+                    stack.append(self.GOTO[stack[-1]][tag.Left.Name][0])
                     output.append(tag)
                 elif action == ShiftReduceParser.OK:
                     output.reverse()
-                    return output, productions
+                    return False, output, verbosity
                 else:
                     assert False, "Must be something wrong!"
-            except KeyError:
-                return None, None
+            except (KeyError, AssertionError):
+                return False, output, verbosity
 
     def _conflict_on(self, table, X, symbol):
-        if X in table and symbol in table[X] and len() == 2:
-            return f"Conflicto:\n\t( {table[X][symbol][0][0]} - {table[X][symbol][1][0]}, Estado: {X}, Símbolo: {symbol} )\n"
+        if X in table and symbol.Name in table[X] and len(table[X][symbol.Name]) == 2:
+            return f"Conflicto:\n\t( {table[X][symbol.Name][0][0]} - {table[X][symbol.Name][1][0]}, Estado: {X}, Símbolo: {symbol} )\n"
         return ""
+
+    def _str_tables(self):
+        str_res = (
+            "\n ---------------------- ACTION --------------------------\n"
+            + str(table_to_dataframe(self.ACTION))
+            + "\n\n ---------------- GOTO ---------------------\n"
+            + str(table_to_dataframe(self.GOTO))
+        )
+        return str_res
+
+    def _str_conflicts(self):
+        str_res = (
+            "\n ---------------------- PARSER-CONFLICTS --------------------------\n" + self.errors
+        )
+        return str_res
