@@ -486,7 +486,6 @@ class Grammar:
         ans += "Producciones:\n\t"
 
         ans += "\n\t".join(repr(p) for p in self.Productions) + "\n" if self.Productions else "\n"
-        # str(self.Productions)
 
         return ans
 
