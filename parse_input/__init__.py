@@ -9,5 +9,6 @@ from .parser_tools import (
     useless_productions,
     lambda_productions,
     is_regular_grammar,
-    unit_productions
+    unit_productions,
+    remove_bads_productions
 )

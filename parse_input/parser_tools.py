@@ -106,29 +106,46 @@ def useless_productions(G: Grammar):
         if cur_nt.IsTerminal:
             continue
 
-        for p in cur_nt.productions:
-            for sym in p.Right:
-                if sym not in visited:
-                    stack.append(sym)
-                    visited.append(sym)
+        for p in G.Productions:
+            if cur_nt == p.Left:
+                for symb in p.Right:
+                    if symb not in visited:
+                        stack.append(symb)
+                        visited.append(symb)
+
+    print(visited)
+
+        # for p in cur_nt.productions:
+        #     for sym in p.Right:
+        #         if sym not in visited:
+        #             stack.append(sym)
+        #             visited.append(sym)
+
+    toremove = []
 
     for nt in G.nonTerminals[:]:
-        if nt not in visited and nt in G.nonTerminals:
-            G.Remove_Symbol(nt)
-    changes = True
-    while changes:
-        changes = False
-        for nt in G.nonTerminals:
-            if (
-                any(all(s in finalize for s in prod.Right) for prod in nt.productions)
-                and nt not in finalize
-            ):
-                changes = True
-                finalize.append(nt)
+        if nt not in visited and nt not in toremove:
+            toremove.append(nt)
+    
+    for nt in toremove:
+        G.Remove_Symbol(nt)
 
-    for nt in G.nonTerminals:
-        if nt not in finalize and nt:
-            G.Remove_Symbol(nt)
+    # changes = True
+    # while changes:
+    #     changes = False
+    #     for nt in G.nonTerminals:
+    #         if (
+    #             any(all(s in finalize for s in prod.Right) for prod in nt.productions)
+    #             and nt not in finalize
+    #         ):
+    #             changes = True
+    #             finalize.append(nt)
+
+    # for nt in G.nonTerminals:
+    #     if nt not in finalize and nt:
+    #         G.Remove_Symbol(nt)
+    
+    # print("grammar", G)
     return G
 
 
@@ -213,7 +230,7 @@ def remove_bads_productions(Grammar):
     for nt in Grammar.nonTerminals:
         dicc[nt] = False
 
-    # dicc['epsilon'] = True
+    dicc[Grammar.Epsilon] = True
     # dicc['e'] = True
 
     changed = True
@@ -231,6 +248,12 @@ def remove_bads_productions(Grammar):
                 if dicc[prod.Left] == False:
                     dicc[prod.Left] = True
                     changed = True
+
+    for key in dicc.keys():
+        if dicc[key] == False:
+            for symb in Grammar.nonTerminals:
+                if symb.Name == key:
+                    Grammar.Remove_Symbol(symb)
 
     print(dicc)
 

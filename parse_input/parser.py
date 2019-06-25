@@ -21,6 +21,7 @@ SYMBOLS_NAME = {
     ";": "semicolon",
     "e": "epsilon",
     "epsilon": "epsilon",
+    "=": "equals"
 }
 # falta r'[0-9]+': 'num'
 

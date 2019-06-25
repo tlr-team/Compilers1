@@ -1,9 +1,1 @@
-S -->  S s| s d A|d s B 
-S -->  e 
-C --> d c
-D --> a s d
-S -->  S s| d 
-A -->B s d | epsilon 
-B --> A s f
-B --> C d | epsilon
-G --> a s d f r
+{"NonTerminals": ["S", "A", "B"], "Terminals": ["a", "b", "c", "d"], "Productions": [{"Head": "S", "Body": ["a", "b", "S"]}, {"Head": "S", "Body": ["a", "A"]}, {"Head": "S", "Body": ["b", "B"]}, {"Head": "A", "Body": ["c", "d"]}, {"Head": "A", "Body": ["B"]}, {"Head": "B", "Body": ["a"]}, {"Head": "B", "Body": ["A"]}]}

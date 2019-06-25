@@ -398,35 +398,36 @@ class Grammar:
         assert type(production) == self.pType, "The Productions most be of only 1 type."
 
         production.Left.productions.remove(production)
-        self.Productions.remove(production)
+        if production in self.Productions:
+            self.Productions.remove(production)
 
     def Remove_Symbol(self, symbol):
-
-        assert isinstance(symbol, Symbol)
-        if self.startSymbol == symbol:
-            self.symbDict = {}
-            self.startSymbol = None
-            self.terminals = []
-            self.nonTerminals = []
-            self.Productions = []
-            return
-        if symbol.IsEpsilon:
-            return
-        to_delete = self.nonTerminals[:] + self.terminals[:]
-        for prod in self.Productions[:]:
-            if prod.Left == symbol or symbol in prod.Right:
-                self.Remove_Production(prod)
-            else:
-                for s in [prod.Left] + list(prod.Right[:]):
-                    if s in to_delete:
-                        to_delete.remove(s)
-        for sym in to_delete:
-            if isinstance(sym, Terminal):
-                self.terminals.remove(sym)
-            else:
-                self.nonTerminals.remove(sym)
-            del self.symbDict[sym.Name]
-
+        print("symbol",symbol)
+        if symbol != self.Epsilon:
+            assert isinstance(symbol, Symbol)
+            if self.startSymbol == symbol:
+                self.symbDict = {}
+                self.startSymbol = None
+                self.terminals = []
+                self.nonTerminals = []
+                self.Productions = []
+                return
+            if symbol.IsEpsilon:
+                return
+            to_delete = self.nonTerminals[:] + self.terminals[:]
+            for prod in self.Productions[:]:
+                if prod.Left == symbol or symbol in prod.Right:
+                    self.Remove_Production(prod)
+                else:
+                    for s in [prod.Left] + list(prod.Right[:]):
+                        if s in to_delete:
+                            to_delete.remove(s)
+            for sym in to_delete:
+                if isinstance(sym, Terminal):
+                    self.terminals.remove(sym)
+                else:
+                    self.nonTerminals.remove(sym)
+                del self.symbDict[sym.Name]
         return
 
     def Terminal(self, name):

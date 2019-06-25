@@ -24,6 +24,7 @@ class GramarUI(Ui_MainWindow):
         self.current_filename = None
         #
         self.associate_actions()
+        self.svg_imgs = []
 
     def associate_actions(self):
         self.actionLoadGrammar.triggered.connect(self.load_grammar)
@@ -196,6 +197,9 @@ class GramarUI(Ui_MainWindow):
         )
         G = deepcopy(self.grammar)
         res += f"ORIGINAL:\n{str(G)}\n\n"
+
+        parse_input.remove_left_rec(G)
+        res += f"Sin producciones recursividad izquierda:\n{str(G)}\n\n"
         
         parse_input.lambda_productions(G)
         res += f"Sin producciones lambda:\n{str(G)}\n\n"
@@ -203,10 +207,8 @@ class GramarUI(Ui_MainWindow):
         parse_input.unit_productions(G)
         res += f"Sin producciones unitarias:\n{str(G)}\n\n"
         
-        parse_input.remove_left_rec(G)
-        res += f"Sin producciones recursividad izquierda:\n{str(G)}\n\n"
-        
         parse_input.useless_productions(G)
+        parse_input.remove_bads_productions(G)
         res += f"Sin producciones innecesarias:\n{str(G)}\n"
 
         return res
