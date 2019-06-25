@@ -49,7 +49,7 @@ class SLR(ShiftReduceParser):
         is_slr = True
         errors = ''
         for i, node in enumerate(self.automaton):
-            print(i, node)
+            # print(i, node)
             node.idx = i
             node.tag = f"I{i}"
 
@@ -60,22 +60,22 @@ class SLR(ShiftReduceParser):
                 if item.IsReduceItem:
                     prod = item.production
                     if prod.Left == self.startSymbol:
-                        is_slr &= self._register(self.ACTION, idx, self.EOF.Name, (ShiftReduceParser.OK, None))
+                        is_slr &= self._register(self.ACTION, idx, self.EOF, (ShiftReduceParser.OK, ''))
                     else:
                         for symbol in self.follows[prod.Left]:
-                            is_slr &= self._register(self.ACTION, idx, symbol.Name, (ShiftReduceParser.REDUCE, prod))
+                            is_slr &= self._register(self.ACTION, idx, symbol, (ShiftReduceParser.REDUCE, prod))
                             errors += (
                                 self._conflict_on(self.ACTION, idx, symbol) if not is_slr else ""
                             )               
                 else:
                     next_symbol = item.NextSymbol
                     if next_symbol.IsTerminal:
-                        is_slr &= self._register(self.ACTION, idx, next_symbol.Name, (ShiftReduceParser.SHIFT, node[next_symbol.Name][0].idx))
+                        is_slr &= self._register(self.ACTION, idx, next_symbol, (ShiftReduceParser.SHIFT, node[next_symbol.Name][0].idx))
                         errors += (
                                 self._conflict_on(self.ACTION, idx, next_symbol) if not is_slr else ""
                             )
                     else:
-                        is_slr &= self._register(self.GOTO, idx, next_symbol.Name, node[next_symbol.Name][0].idx)
+                        is_slr &= self._register(self.GOTO, idx, next_symbol, node[next_symbol.Name][0].idx)
                         errors += self._conflict_on(self.GOTO, idx, next_symbol) if not is_slr else ""
                         
         self.errors = errors
