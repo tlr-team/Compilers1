@@ -2,6 +2,7 @@ from .parser_abstract import ShiftReduceParser
 from .parser_lr import LR1
 from automaton import  State
 from tools import empty_formatter
+
 class LALR(LR1):
     def _mergue_items_lookaheads(self, items, others):
         if len(items) != len(others):
@@ -21,7 +22,7 @@ class LALR(LR1):
 
         return True
 
-    def _build_parser(self): #build_LR1_automaton
+    def _build_automaton(self): #build_LR1_automaton
         super()._build_automaton()
 
         states = list(self.automaton)
@@ -53,3 +54,4 @@ class LALR(LR1):
 
         new_states[0].set_formatter(empty_formatter)
         self.automaton = new_states[0]
+        # self.parse_corrupted
