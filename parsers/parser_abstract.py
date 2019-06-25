@@ -1,4 +1,5 @@
 from functools import wraps
+from automaton import State
 from grammar import Grammar
 from .parser_tools import compute_firsts, compute_follows, compute_local_first
 from tools import table_to_dataframe, pretty_table
@@ -113,18 +114,6 @@ class Parser:
         """
         raise NotImplementedError
 
-    @corrupt_protection
-    @property
-    def svg_automaton(self):
-        """
-            Returns an image in svg format.\n
-            `This method must be hided for another implementation`
-        """
-        try:
-            return self.automaton._repr_svg_()
-        except:
-            pass
-
     # EndToImplement
 
     def _register(self, table, X, sym, val):
@@ -205,14 +194,20 @@ class ShiftReduceParser(Parser):
         return ""
 
     def _str_tables(self):
-        str_res = (
-            "\n < TABLA-ACTION >\n"
+        self.automaton: State
+        
+        str_res = ""
+        for node in self.automaton:
+            str_res += f"\n{node.tag}:\n  " + "\n  ".join(str(s) for s in node.state)
+
+        str_res += (
+            "\n\n"
             + str(
                 pretty_table(
                     self.G, self.ACTION, column_names=["Action"] + [t.Name for t in self.terminals]
                 )
             )
-            + "\n\n < TABLA-GOTO >\n"
+            + "\n\n"
             + str(
                 pretty_table(
                     self.G, self.GOTO, column_names=["Goto"] + [nt.Name for nt in self.nonTerminals]
