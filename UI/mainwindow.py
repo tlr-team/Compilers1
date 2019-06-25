@@ -17,7 +17,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.setWindowModality(QtCore.Qt.WindowModal)
-        MainWindow.resize(843, 616)
+        MainWindow.resize(1280, 728)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("images/Qt.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
@@ -68,22 +68,31 @@ class Ui_MainWindow(object):
         self.buttonAskBelongs = QtWidgets.QPushButton(self.tabBelongs)
         self.buttonAskBelongs.setObjectName("buttonAskBelongs")
         self.gridLayout_1.addWidget(self.buttonAskBelongs, 1, 0, 1, 1)
-        self.label_belong_result = QtWidgets.QLabel(self.tabBelongs)
+        # self.textResults = QtWidgets.QTextBrowser(self.tabResults)
+        # self.textResults.setObjectName("textResults")
+        self.label_belong_result = QtWidgets.QTextBrowser(self.tabBelongs)
         self.label_belong_result.setInputMethodHints(QtCore.Qt.ImhMultiLine)
         self.label_belong_result.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.label_belong_result.setFrameShadow(QtWidgets.QFrame.Plain)
         self.label_belong_result.setLineWidth(1)
         self.label_belong_result.setText("")
-        self.label_belong_result.setTextFormat(QtCore.Qt.PlainText)
+        # self.label_belong_result.setTextFormat(QtCore.Qt.PlainText)
         self.label_belong_result.setObjectName("label_belong_result")
         self.gridLayout_1.addWidget(self.label_belong_result, 2, 0, 1, 1)
+        self.svgDerivation = QtWidgets.QWidget(self.tabBelongs)
+        self.svgDerivation.setObjectName("svgDerivation")
+        self.gridLayout_1.addWidget(self.svgDerivation, 3, 0, 1, 1)
         self.tabWidget.addTab(self.tabBelongs, "")
         self.tabResults = QtWidgets.QWidget()
         self.tabResults.setObjectName("tabResults")
         self.gridLayout_2 = QtWidgets.QGridLayout(self.tabResults)
         self.gridLayout_2.setObjectName("gridLayout_2")
+        font = QtGui.QFont()
+        font.setFamily("Consolas")
+        font.setPointSize(15)
         self.textResults = QtWidgets.QTextBrowser(self.tabResults)
         self.textResults.setObjectName("textResults")
+        self.textResults.setFont(font)
         self.gridLayout_2.addWidget(self.textResults, 0, 0, 1, 1)
         self.tabWidget.addTab(self.tabResults, "")
         # self.tabAutomaton = QtWidgets.QWidget()
@@ -194,14 +203,39 @@ class Ui_MainWindow(object):
     def dialog_warning(self, s):
         self._dialog(s, QMessageBox.Warning)
 
-    def show_svg(self, svg_img: str, widget: QtWidgets.QWidget = None):
+    def show_svg(self, svg_img: str, widget: QtWidgets.QWidget, size=None):
         svg_bytes = bytearray(svg_img, encoding="utf-8")
         svgWidget = QSvgWidget(widget)
         svgWidget.renderer().load(svg_bytes)
-        width = int(svg_img.split('width="', 1)[1].split('pt', 1)[0])
-        height = int(svg_img.split('height="', 1)[1].split('pt', 1)[0])
-        width = min(widget.width(), width)
-        height = min(widget.height(), height)
+        width = int(svg_img.split('width="', 1)[1].split("pt", 1)[0])
+        height = int(svg_img.split('height="', 1)[1].split("pt", 1)[0])
+        px_xy = width / height
+
+        wwidth = widget.width() if not size else size[0]
+        wheight = widget.height() if not size else size[1]
+
+        # width = wwidth
+        # height = wheight
+
+        if width > wwidth or height > wheight:  # FIXME: ALL
+            if width > wwidth and height > wheight:
+                if width / wwidth > height / wheight:
+                    diff_width = width - wwidth
+                    width = wwidth
+                    height -= (diff_width) * 1 / (px_xy)
+                else:
+                    diff_height = height - wheight
+                    height = wheight
+                    width -= (diff_height) * (px_xy)
+            elif width > wwidth:
+                diff_width = width - wwidth
+                width = wwidth
+                height -= (diff_width) * 1 / (px_xy)
+            else:
+                diff_height = height - wheight
+                height = wheight
+                width -= (diff_height) * (px_xy)
+
         svgWidget.setGeometry(0, 0, width, height)
         svgWidget.show()
 
@@ -221,14 +255,14 @@ class Ui_MainWindow(object):
             _translate("MainWindow", name),
         )
 
-        self.show_svg(svg_str, tab)
+        self.show_svg(svg_str, tab, size=(1122, 600))
 
     def _close_all_automatons(self):
         count = len(self.tabs_automatons)
         while count:
             self.tabWidget.removeTab(self.tabWidget.indexOf(self.tabResults) + count)
             count -= 1
-        
+
         for tab, grid in self.tabs_automatons.values():
             # grid.close()
             # grid.deleteLater()
