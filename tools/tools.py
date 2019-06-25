@@ -127,3 +127,36 @@ def table_to_dataframe(table):
 
     return DataFrame.from_dict(d, orient="index", dtype=str)
 
+
+def pretty_table(G, table, column_names=None):
+    column_names = column_names if column_names else [" "] + [str(t) for t in G.terminals]
+    rows = []
+
+    for state in table:
+        rows.append([str(state)])
+        for symbol_name in column_names[1:]:
+            symbol = G[symbol_name]
+            if symbol in table[state]:
+                value = encode_value(table[state][symbol][0]) + (
+                    f" {encode_value(table[state][symbol][1])}\n(Conflicto)"
+                    if len(table[state][symbol]) > 1
+                    else ""
+                )
+            else:
+                value = "NaN"
+            rows[-1].append(value)
+
+    return _pretty_table(column_names, rows)
+
+
+def _pretty_table(column_names: list, rows: list):
+    assert all(len(column_names) == len(row) for row in rows) and all(
+        isinstance(name, str) for name in column_names
+    ), "bad format."
+
+    p_table = ptable.PrettyTable()
+    p_table.field_names = column_names[:]
+    for row in rows:
+        p_table.add_row(row)
+
+    return p_table
