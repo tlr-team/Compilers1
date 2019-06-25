@@ -1,5 +1,6 @@
 from itertools import islice, compress, product
 from grammar import NonTerminal, Grammar, Sentence, SentenceList, Production
+from copy import deepcopy
 
 
 def get_new_nonterminal(nt_father, suffix, G):
@@ -147,6 +148,7 @@ def set_all_combinations(production, nulleables):
             # G[production.Left.Name] %= Sentence(*body)
     return to_add
 
+
 def combinations(items):
     return (set(compress(items, mask)) for mask in product(*[[0, 1]] * len(items)))
 
@@ -202,92 +204,58 @@ def is_regular_grammar(G: Grammar):
     return answer
 
 
-def convert_to_nfa(G: Grammar):
-    g = lambda_productions(G)
+# def Remove_Bads_Productions(Grammar):
+#     dicc = {}
+
+#     for t in Grammar.terminals:
+#         dicc[t] = True
+
+#     for nt in Grammar.nonTerminals:
+#         dicc[nt] = False
+
+#     # dicc['epsilon'] = True
+#     # dicc['e'] = True
+
+#     changed = True
+
+#     print(dicc)
+
+#     while changed:
+#         changed = False
+#         for prod in Grammar.Productions:
+#             for i in prod.Right:
+#                 print(i)
+#                 if dicc[i] == False:
+#                     break
+#             else:
+#                 if dicc[prod.Left] == False:
+#                     dicc[prod.Left] = True
+#                     changed = True
+
+#     print(dicc)
 
 
-def remove_unit_productions(Grammar):
-    visited = []
-    Incomming = []
-    bads = []
+# def Remove_Unit_Productions(G: Grammar):
+#     unit_prodution_free = []
+#     unit_productions = []
 
-    print("producciones", Grammar.Productions)
+#     for prod in G.Productions:
+#         if len(prod.Right) == 1 and prod.Right[0].IsNonTerminal:
+#             unit_productions.append(prod)
+#         else:
+#             unit_prodution_free.append(prod)
 
-    initial = Grammar.startSymbol
+#     for up in unit_productions:
+#         right = up.Right[0]
+#         for nup in unit_prodution_free:
+#             if nup.Left == right:
+#                 nprod = Production(up.Left, nup.Right)
+#                 for p in unit_prodution_free:
+#                     if p == nprod:
+#                         break
+#                 else:
+#                     unit_prodution_free.append(nprod)
 
-    Incomming.append(initial)
-
-    while len(Incomming) > 0:
-        t = Incomming.pop()
-        if not t in visited:
-            visited.append(t)
-            for prod in Grammar.Productions:
-                if prod.Left == t:
-                    for i in prod.Right:
-                        if i.IsNonTerminal and i not in visited and i not in Incomming:
-                            Incomming.append(i)
-
-    for i in Grammar.nonTerminals:
-        if i not in visited:
-            bads.append(i)
-
-    print("bads", bads)
-
-    # construir la gramatica
-
-
-def Remove_Bads_Productions(Grammar):
-    dicc = {}
-
-    for t in Grammar.terminals:
-        dicc[t] = True
-
-    for nt in Grammar.nonTerminals:
-        dicc[nt] = False
-
-    # dicc['epsilon'] = True
-    # dicc['e'] = True
-
-    changed = True
-
-    print(dicc)
-
-    while changed:
-        changed = False
-        for prod in Grammar.Productions:
-            for i in prod.Right:
-                print(i)
-                if dicc[i] == False:
-                    break
-            else:
-                if dicc[prod.Left] == False:
-                    dicc[prod.Left] = True
-                    changed = True
-
-    print(dicc)
-
-
-def Remove_Unit_Productions(G: Grammar):
-    unit_prodution_free = []
-    unit_productions = []
-
-    for prod in G.Productions:
-        if len(prod.Right) == 1 and prod.Right[0].IsNonTerminal:
-            unit_productions.append(prod)
-        else:
-            unit_prodution_free.append(prod)
-
-    for up in unit_productions:
-        right = up.Right[0]
-        for nup in unit_prodution_free:
-            if nup.Left == right:
-                nprod = Production(up.Left, nup.Right)
-                for p in unit_prodution_free:
-                    if p == nprod:
-                        break
-                else:
-                    unit_prodution_free.append(nprod)
-
-    G.Productions = unit_prodution_free
-    return G
+#     G.Productions = unit_prodution_free
+#     return G
 

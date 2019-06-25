@@ -4,6 +4,7 @@ from automaton import State
 from .parser_tools import compute_firsts, compute_follows
 from tools import multiline_formatter
 
+
 class LR0(ShiftReduceParser):
     pass
 
@@ -57,7 +58,6 @@ class LR1(ShiftReduceParser):
         self._follows = compute_follows(self.G, self.firsts)
 
         self.firsts[self.EOF] = ContainerSet(self.EOF)
-        self.Items = {}
 
         start_prod = self.startSymbol.productions[0]
         start_item = Item(start_prod, 0, lookaheads=(self.EOF,))
@@ -100,7 +100,7 @@ class LR1(ShiftReduceParser):
         for i, node in enumerate(self.automaton):
             # print(i, "\t", "\n\t ".join(str(x) for x in node.state), "\n")
             node.idx = i
-            node.tag = f'I{i}'
+            node.tag = f"I{i}"
 
         for node in self.automaton:
             idx = node.idx
@@ -144,8 +144,6 @@ class LR1(ShiftReduceParser):
         self.Errors = errors
         self._parse_corrupted = not is_lr1
         self.automaton.set_formatter(multiline_formatter)
-
-
 
 
 def conflict_cond_lr1(cell: list):

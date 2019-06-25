@@ -15,8 +15,6 @@ def convert_to_nfa(G: Grammar):
 
     dicc = {p: i for i, p in enumerate(g.nonTerminals)}
 
-    print(g.Productions)
-
     for p in g.Productions:
         try:
             if len(p.Right) > 1:
