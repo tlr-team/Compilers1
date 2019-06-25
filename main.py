@@ -8,6 +8,7 @@ import parse_input
 import parsers
 import regex
 
+from copy import deepcopy
 from grammar import Grammar, Symbol, Terminal, NonTerminal
 from tools import DerivationTree
 from UI import Ui_MainWindow
@@ -161,9 +162,9 @@ class GramarUI(Ui_MainWindow):
     def get_results(self):
         if not self.grammar:
             return "Sintáxis de gramática incorrecta..."
-        res = "RESULTADOS:\n"
+        res = "RESULTADOS:\n\n"
 
-        res += str(self.grammar) + "\n"
+        res += "\nGRAMÁTICA:\n" + str(self.grammar) + "\n\n"
 
         # reducciones de gramaticas, firsts and follows
         res += self._get_metainfo()
@@ -179,32 +180,44 @@ class GramarUI(Ui_MainWindow):
                 res += _info
                 if _aut:
                     self.svg_imgs.append((name, _aut))
+
+        res += "\n" + (60 * "=") + "\n"
+        res += (
+            "\nReducciones de gramática:\n "
+            + "(Recursividad Izquierda, Producciones lambda, Producciones Unitarias y Producciones Innecesarias)\n"
+        )
+        G = deepcopy(self.grammar)
+        res += f"ORIGINAL:\n{str(G)}\n"
+        res += f"Sin producciones lambda:\n{str(G)}\n"
+        res += f"Sin producciones unitarias:\n{str(G)}\n"
+        res += f"Sin producciones recursividad izquierda:\n{str(G)}\n"
+        res += f"Sin producciones innecesarias:\n{str(G)}\n"
         return res
 
     def _get_metainfo(self):
         firsts = parsers.compute_firsts(self.grammar)
         follows = parsers.compute_follows(self.grammar, firsts)
-        print(firsts, follows)
+
         res = (
-            "FIRSTS: \n No Terminales:\n\t"
+            "FIRSTS: \n  No Terminales:\n\t"
             + "\n\t".join(
-                str(w) + "   " + str(f) for w, f in firsts.items() if isinstance(w, NonTerminal)
+                str(w) + "    " + str(f) for w, f in firsts.items() if isinstance(w, NonTerminal)
             )
-            + "\n Terminales:\n\t"
+            + "\n  Terminales:\n\t"
             + "\n\t".join(
-                str(w) + "   " + str(f) for w, f in firsts.items() if isinstance(w, Terminal)
+                str(w) + "    " + str(f) for w, f in firsts.items() if isinstance(w, Terminal)
             )
-            + "\n Alpha:\n\t"
+            + "\n  Alpha:\n\t"
             + "\n\t".join(
-                str(w) + "   " + str(f) for w, f in firsts.items() if not isinstance(w, Symbol)
+                str(w) + "    " + str(f) for w, f in firsts.items() if not isinstance(w, Symbol)
             )
             + "\n"
         )
 
         res += (
-            "FOLLOWS: \n No Terminales:\n\t"
+            "FOLLOWS: \n  No Terminales:\n\t"
             + "\n\t".join(
-                str(w) + "   " + str(f) for w, f in follows.items() if isinstance(w, NonTerminal)
+                str(w) + "    " + str(f) for w, f in follows.items() if isinstance(w, NonTerminal)
             )
             # + "\n Terminales:\n\t"
             # + "\n\t".join(str(w) + "   " + str(f) for w, f in follows.items() if isinstance(w, Terminal))
@@ -212,7 +225,6 @@ class GramarUI(Ui_MainWindow):
             # + "\n\t".join(str(w) + "   " + str(f) for w, f in follows.items() if not isinstance(w, Symbol))
             + "\n"
         )
-        # TODO: add the reductions left rec, unit prod, lambda prod,etc
         return res
 
     def _regex_parser_results(self):  # ??? is the same as ll1
