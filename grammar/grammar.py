@@ -8,7 +8,7 @@ class ContainerSet:
 
     def add(self, value):
         n = len(self.set)
-        self.set.update(value)
+        self.set.add(value)
         return n != len(self.set)
 
     def set_epsilon(self, value=True):
@@ -449,9 +449,15 @@ class Grammar:
 
         return ans
 
-    def tokenize(self, text: list):
-        return [self.symbDict[word] for word in text.split()] + [G.EOF]
-
+    def tokenize(self, text):
+        try:
+            if isinstance(text, str):
+                return [self.symbDict[word] for word in text.split()] + [self.EOF]
+            if isinstance(text, (list, tuple)):
+                return [self.symbDict[word] for word in text] + [self.EOF]
+        except KeyError:
+            pass
+        return [self.EOF]
 
     def __getitem__(self, symbol_name):
         return self.symbDict[symbol_name]
@@ -464,20 +470,20 @@ class Grammar:
 
         mul = "%s, "
 
-        ans = "Non-Terminals:\n\t"
+        ans = "No Terminales:\n\t"
         if self.nonTerminals:
             nonterminals = mul * (len(self.nonTerminals) - 1) + "%s\n"
 
             ans += nonterminals % tuple(self.nonTerminals)
 
-        ans += "Terminals:\n\t"
+        ans += "Terminales:\n\t"
         if self.terminals:
 
             terminals = mul * (len(self.terminals) - 1) + "%s\n"
 
             ans += terminals % tuple(self.terminals)
 
-        ans += "Productions:\n\t"
+        ans += "Producciones:\n\t"
 
         ans += "\n\t".join(repr(p) for p in self.Productions) + "\n" if self.Productions else "\n"
         # str(self.Productions)
@@ -552,8 +558,8 @@ class Grammar:
     def IsAugmentedGrammar(self):
         return len([0 for left, _ in self.Productions if self.startSymbol == left]) <= 1
 
-    def AugmentedGrammar(self):
-        if not self.IsAugmentedGrammar:
+    def AugmentedGrammar(self, force=False):
+        if not self.IsAugmentedGrammar or force:
 
             G = self.copy()
             # S, self.startSymbol, SS = self.startSymbol, None, self.NonTerminal('S\'', True)
