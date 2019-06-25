@@ -8,7 +8,8 @@ import parse_input
 import parsers
 import regex
 
-from grammar import Grammar
+from grammar import Grammar, Symbol, Terminal, NonTerminal
+from tools import DerivationTree
 from UI import Ui_MainWindow
 
 
@@ -30,7 +31,6 @@ class GramarUI(Ui_MainWindow):
         self.actionSaveGrammarAs.triggered.connect(self.save_grammar_as)
         self.actionAnalyse.triggered.connect(self.analyse)
         self.buttonAskBelongs.clicked.connect(self.ask_belongs)
-        # self.actionExit.triggered.connect(None)
 
     def _load_grammar(self, file_name: str):
         self.current_filename = file_name
@@ -119,62 +119,41 @@ class GramarUI(Ui_MainWindow):
 
     ############## Word Belongs ##############
     def ask_belongs(self):
-        word = self.textEdit_input_belongs.toPlainText().strip("\n \t").split(' ')
-        if self.grammar:
-            word.append(self.grammar.EOF.Name if self.grammar else "$")
-        res_belongs = self.get_belongs_info(word)
+        word = self.textEdit_input_belongs.toPlainText().strip("\n \t").split(" ")
+        _word = "" if not self.grammar else self.grammar.tokenize(word)
+        res_belongs, derivation = self.get_belongs_info(_word)
         self.label_belong_result.setText(res_belongs)
+        if derivation:
+            derivation = derivation._repr_svg_()
+            if derivation:
+                self.create_svg_slot(f"Derivación({','.join(word)})", derivation)
 
     def get_belongs_info(self, word):
         if not self.grammar:
-            return "Gramática no entrada o sin analizar..."
+            return "Gramática no entrada o sin analizar...", None
         res = "RESULTADOS:\n"
+        parser, name, _type = (
+            (None, None, None) if self.lalr.parse_corrupted else (self.lalr, "LALR", "Right")
+        )
+        parser, name, _type = (
+            (parser, name, _type) if self.lr.parse_corrupted else (self.lr, "LR1", "Right")
+        )
+        parser, name, _type = (
+            (parser, name, _type) if self.slr.parse_corrupted else (self.slr, "SLR1", "Right")
+        )
+        parser, name, _type = (
+            (parser, name, _type) if self.ll1.parse_corrupted else (self.ll1, "LL1", "Left")
+        )
 
-        for meth_name in GramarUI.__dict__:
-            if meth_name.endswith("_belongs_results") and callable(getattr(GramarUI, meth_name)):
-                valid, _info = GramarUI.__dict__[meth_name](self, word)
-                res += str(_info) + "\n" if valid else ""  # TODO: fix format correctly
-        return res
+        if not _type:
+            return "Ninguno de los parsers esta disponible...", None
+        recognized, derivation, verbosity = parser(word, True)
+        derivation = DerivationTree.get_tree(derivation, _type) if derivation else None
 
-    def _regex_belongs_results(self, word):
-        try:
-            self.regex  # TODO: Pending to implementation
-            assert not self.regex.parse_corrupted
-        except:
-            return False, None
-        return True, self.regex(word)  # TODO: Pending to implementation
-
-    def _ll1_belongs_results(self, word):
-        try:
-            self.ll1
-            assert not self.ll1.parse_corrupted
-        except:
-            return False, None
-        return True, self.ll1(word)
-
-    def _lr_belongs_results(self, word):
-        try:
-            self.lr
-            assert not self.lr.parse_corrupted
-        except:
-            return False, None
-        return True, self.lr(word)
-
-    def _lalr_belongs_results(self, word):
-        try:
-            self.lalr
-            assert not self.lalr.parse_corrupted
-        except:
-            return False, None
-        return True, self.lalr(word)
-
-    def _slr_belongs_results(self, word):
-        try:
-            self.slr
-            assert not self.slr.parse_corrupted
-        except:
-            return False, None
-        return True, self.slr(word)
+        res += name + "\n"
+        res += "La cadena fue reconocida.\n\n" if recognized else "La cadena no fue reconocida.\n"
+        res += verbosity
+        return res, derivation
 
     ############## End Word Belongs ##############
 
@@ -196,7 +175,7 @@ class GramarUI(Ui_MainWindow):
             if meth_name.endswith("_parser_results") and callable(getattr(GramarUI, meth_name)):
                 _info, _aut = GramarUI.__dict__[meth_name](self)
                 name = meth_name.split("_parser_results")[0].strip("_")
-                res += "\n" + (20 * "-") + name + (20 * "-") + "\n"
+                res += "\n" + (25 * "=") + " " + name.upper() + " " + (25 * "=") + "\n"
                 res += _info
                 if _aut:
                     self.svg_imgs.append((name, _aut))
@@ -207,11 +186,30 @@ class GramarUI(Ui_MainWindow):
         follows = parsers.compute_follows(self.grammar, firsts)
         print(firsts, follows)
         res = (
-            "firsts: \n\t" + "\n\t".join(str(w) + " > " + str(f) for w, f in firsts.items()) + "\n"
+            "FIRSTS: \n No Terminales:\n\t"
+            + "\n\t".join(
+                str(w) + "   " + str(f) for w, f in firsts.items() if isinstance(w, NonTerminal)
+            )
+            + "\n Terminales:\n\t"
+            + "\n\t".join(
+                str(w) + "   " + str(f) for w, f in firsts.items() if isinstance(w, Terminal)
+            )
+            + "\n Alpha:\n\t"
+            + "\n\t".join(
+                str(w) + "   " + str(f) for w, f in firsts.items() if not isinstance(w, Symbol)
+            )
+            + "\n"
         )
+
         res += (
-            "follows: \n\t"
-            + "\n\t".join(str(w) + " > " + str(f) for w, f in follows.items())
+            "FOLLOWS: \n No Terminales:\n\t"
+            + "\n\t".join(
+                str(w) + "   " + str(f) for w, f in follows.items() if isinstance(w, NonTerminal)
+            )
+            # + "\n Terminales:\n\t"
+            # + "\n\t".join(str(w) + "   " + str(f) for w, f in follows.items() if isinstance(w, Terminal))
+            # + "\n Alpha:\n\t"
+            # + "\n\t".join(str(w) + "   " + str(f) for w, f in follows.items() if not isinstance(w, Symbol))
             + "\n"
         )
         # TODO: add the reductions left rec, unit prod, lambda prod,etc
@@ -219,19 +217,21 @@ class GramarUI(Ui_MainWindow):
 
     def _regex_parser_results(self):  # ??? is the same as ll1
         is_reg = parse_input.is_regular_grammar(self.grammar)
-        res = (
-            "Es Regular:\n" if is_reg else "No es Regular.\n"
-        )
+        res = "Es Regular:\n" if is_reg else "No es Regular.\n"
         if is_reg:
-            nfa = regex.convert_to_nfa(self.grammar)
-            self.regex = regex.regex_from_nfa(nfa)
+            self.regex_nfa = regex.convert_to_nfa(self.grammar)
+            self.regex = regex.regex_from_nfa(self.regex_nfa)
             res += str(self.regex) + "\n"
-            return res, nfa._repr_svg_()
+            return res, self.regex_nfa._repr_svg_()
         return res, None
 
     def _ll1_parser_results(self):
         self.ll1 = parsers.LL1(self.grammar)
         return str(self.ll1), None  # has no graph
+
+    def _slr_parser_results(self):
+        self.slr = parsers.SLR(self.grammar)
+        return str(self.slr), None if self.slr.parse_corrupted else self.slr.automaton._repr_svg_()
 
     def _lr_parser_results(self):
         self.lr = parsers.LR1(self.grammar)
@@ -239,12 +239,10 @@ class GramarUI(Ui_MainWindow):
 
     def _lalr_parser_results(self):
         self.lalr = parsers.LALR(self.grammar)
-        return str(self.lalr), None # if self.lalr.parse_corrupted else self.lalr.automaton._repr_svg_()
-        return "", None
-
-    def _slr_parser_results(self):
-        self.slr = parsers.SLR(self.grammar)
-        return str(self.slr), None if self.slr.parse_corrupted else self.slr.automaton._repr_svg_()
+        return (
+            str(self.lalr),
+            None if self.lalr.parse_corrupted else self.lalr.automaton._repr_svg_(),
+        )
 
     ############## End Parser Results ##############
 
