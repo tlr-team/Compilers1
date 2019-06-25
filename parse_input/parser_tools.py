@@ -204,58 +204,58 @@ def is_regular_grammar(G: Grammar):
     return answer
 
 
-# def Remove_Bads_Productions(Grammar):
-#     dicc = {}
+def remove_bads_productions(Grammar):
+    dicc = {}
 
-#     for t in Grammar.terminals:
-#         dicc[t] = True
+    for t in Grammar.terminals:
+        dicc[t] = True
 
-#     for nt in Grammar.nonTerminals:
-#         dicc[nt] = False
+    for nt in Grammar.nonTerminals:
+        dicc[nt] = False
 
-#     # dicc['epsilon'] = True
-#     # dicc['e'] = True
+    # dicc['epsilon'] = True
+    # dicc['e'] = True
 
-#     changed = True
+    changed = True
 
-#     print(dicc)
+    print(dicc)
 
-#     while changed:
-#         changed = False
-#         for prod in Grammar.Productions:
-#             for i in prod.Right:
-#                 print(i)
-#                 if dicc[i] == False:
-#                     break
-#             else:
-#                 if dicc[prod.Left] == False:
-#                     dicc[prod.Left] = True
-#                     changed = True
+    while changed:
+        changed = False
+        for prod in Grammar.Productions:
+            for i in prod.Right:
+                print(i)
+                if dicc[i] == False:
+                    break
+            else:
+                if dicc[prod.Left] == False:
+                    dicc[prod.Left] = True
+                    changed = True
 
-#     print(dicc)
+    print(dicc)
 
 
-# def Remove_Unit_Productions(G: Grammar):
-#     unit_prodution_free = []
-#     unit_productions = []
+def unit_productions(G: Grammar):
+    unit_prodution_free = []
+    unit_productions = []
 
-#     for prod in G.Productions:
-#         if len(prod.Right) == 1 and prod.Right[0].IsNonTerminal:
-#             unit_productions.append(prod)
-#         else:
-#             unit_prodution_free.append(prod)
+    for prod in G.Productions:
+        if len(prod.Right) == 1 and prod.Right[0].IsNonTerminal:
+            unit_productions.append(prod)
+        else:
+            unit_prodution_free.append(prod)
 
-#     for up in unit_productions:
-#         right = up.Right[0]
-#         for nup in unit_prodution_free:
-#             if nup.Left == right:
-#                 nprod = Production(up.Left, nup.Right)
-#                 for p in unit_prodution_free:
-#                     if p == nprod:
-#                         break
-#                 else:
-#                     unit_prodution_free.append(nprod)
+    for up in unit_productions:
+        right = up.Right[0]
+        for nup in unit_prodution_free:
+            if nup.Left == right:
+                nprod = Production(up.Left, nup.Right)
+                for p in unit_prodution_free:
+                    if p == nprod:
+                        break
+                else:
+                    unit_prodution_free.append(nprod)
 
-#     G.Productions = unit_prodution_free
-#     return G
+    G.Productions = unit_prodution_free
+    return G
 
