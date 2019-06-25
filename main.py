@@ -37,8 +37,12 @@ class GramarUI(Ui_MainWindow):
         self.current_filename = file_name
         with open(file_name, "r") as file:
             try:
-                self.grammar = Grammar.from_json(file.read())
-                self.textEditGrammar.setPlainText(self.grammar.plain_productions)
+                if file_name.endswith(".grm"):
+                    self.grammar = Grammar.from_json(file.read())
+                    self.textEditGrammar.setPlainText(self.grammar.plain_productions)
+                else:
+                    self.textEditGrammar.setPlainText(file.read())
+                    
                 if self.tabs_automatons:
                     self._close_all_automatons()
 
@@ -50,7 +54,7 @@ class GramarUI(Ui_MainWindow):
         import os
 
         grm_path, _ = QFileDialog.getOpenFileName(
-            self.root, "Cargar gramática...", "./", "gramáticas (*.grm)"
+            self.root, "Cargar gramática...", "./", "gramáticas (*.grm *.txt )"
         )
         if not grm_path or not os.path.exists(grm_path):
             return
@@ -59,8 +63,11 @@ class GramarUI(Ui_MainWindow):
 
     def _save_grammar_at(self, file_name):
         if self.grammar is None:
-            self.analyse()
-        if not self.grammar is None:
+            if not self.textEditGrammar.toPlainText():
+                return
+            raw_grammar = str(self.textEditGrammar.toPlainText())
+            self.grammar = parse_input.parse_to_grammar(raw_grammar.split("\n"))
+        if self.grammar:
             with open(file_name, "w") as file:
                 file.write(self.grammar.to_json)
         return
@@ -164,7 +171,7 @@ class GramarUI(Ui_MainWindow):
             return "Sintáxis de gramática incorrecta..."
         res = "RESULTADOS:\n\n"
 
-        res += "\nGRAMÁTICA:\n" + str(self.grammar) + "\n\n"
+        res += "GRAMÁTICA:\n" + str(self.grammar) + "\n\n"
 
         # reducciones de gramaticas, firsts and follows
         res += self._get_metainfo()
@@ -181,17 +188,27 @@ class GramarUI(Ui_MainWindow):
                 if _aut:
                     self.svg_imgs.append((name, _aut))
 
+        # reductions for the grammar and evolution through them
         res += "\n" + (60 * "=") + "\n"
         res += (
             "\nReducciones de gramática:\n "
             + "(Recursividad Izquierda, Producciones lambda, Producciones Unitarias y Producciones Innecesarias)\n"
         )
         G = deepcopy(self.grammar)
-        res += f"ORIGINAL:\n{str(G)}\n"
-        res += f"Sin producciones lambda:\n{str(G)}\n"
-        res += f"Sin producciones unitarias:\n{str(G)}\n"
-        res += f"Sin producciones recursividad izquierda:\n{str(G)}\n"
+        res += f"ORIGINAL:\n{str(G)}\n\n"
+        
+        parse_input.lambda_productions(G)
+        res += f"Sin producciones lambda:\n{str(G)}\n\n"
+        
+        parse_input.unit_productions(G)
+        res += f"Sin producciones unitarias:\n{str(G)}\n\n"
+        
+        parse_input.remove_left_rec(G)
+        res += f"Sin producciones recursividad izquierda:\n{str(G)}\n\n"
+        
+        parse_input.useless_productions(G)
         res += f"Sin producciones innecesarias:\n{str(G)}\n"
+
         return res
 
     def _get_metainfo(self):
