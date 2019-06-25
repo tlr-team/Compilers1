@@ -217,7 +217,7 @@ class Ui_MainWindow(object):
         # width = wwidth
         # height = wheight
 
-        if width > wwidth or height > wheight:  # FIXME: ALL
+        if width > wwidth or height > wheight:
             if width > wwidth and height > wheight:
                 if width / wwidth > height / wheight:
                     diff_width = width - wwidth
@@ -263,7 +263,7 @@ class Ui_MainWindow(object):
             self.tabWidget.removeTab(self.tabWidget.indexOf(self.tabResults) + count)
             count -= 1
 
-        for tab, grid in self.tabs_automatons.values():
+        for tab, _ in self.tabs_automatons.values():
             # grid.close()
             # grid.deleteLater()
             # del grid

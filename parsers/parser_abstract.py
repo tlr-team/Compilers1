@@ -1,7 +1,7 @@
 from functools import wraps
 from grammar import Grammar
 from .parser_tools import compute_firsts, compute_follows, compute_local_first
-from tools import table_to_dataframe
+from tools import table_to_dataframe, pretty_table
 
 
 def corrupt_protection(func):
@@ -120,7 +120,10 @@ class Parser:
             Returns an image in svg format.\n
             `This method must be hided for another implementation`
         """
-        raise NotImplementedError
+        try:
+            return self.automaton._repr_svg_()
+        except:
+            pass
 
     # EndToImplement
 
@@ -159,7 +162,7 @@ class ShiftReduceParser(Parser):
         self.ACTION = {}
         self.GOTO = {}
         self.errors = ""
-        super().__init__(G.AugmentedGrammar(), firsts=firsts, follows=follows)
+        super().__init__(G.AugmentedGrammar(True), firsts=firsts, follows=follows)
 
     def __call__(self, word, verbose=False):
         """
@@ -178,7 +181,7 @@ class ShiftReduceParser(Parser):
                 action, tag = self.ACTION[state][lookahead][0]
 
                 if verbose:
-                    verbosity += f"stack: {str(stack)}\n({action}: {repr(tag)}) - ({', '.join(s for s in word[pointer:])})\n\n"
+                    verbosity += f"stack: {str(stack)}\n({action}: {repr(tag)}) - ( {' '.join(str(s) for s in word[pointer:])} )\n\n"
 
                 if action == ShiftReduceParser.SHIFT:
                     stack.append(tag)
@@ -186,32 +189,38 @@ class ShiftReduceParser(Parser):
                 elif action == ShiftReduceParser.REDUCE:
                     for _ in range(len(tag.Right)):
                         stack.pop()
-                    stack.append(self.GOTO[stack[-1]][tag.Left.Name][0])
+                    stack.append(self.GOTO[stack[-1]][tag.Left][0])
                     output.append(tag)
                 elif action == ShiftReduceParser.OK:
                     output.reverse()
-                    return False, output, verbosity
+                    return True, output, verbosity
                 else:
                     assert False, "Must be something wrong!"
-            except (KeyError, AssertionError):
+            except (KeyError, AssertionError) as err:
                 return False, output, verbosity
 
     def _conflict_on(self, table, X, symbol):
-        if X in table and symbol.Name in table[X] and len(table[X][symbol.Name]) == 2:
-            return f"Conflicto:\n\t( {table[X][symbol.Name][0][0]} - {table[X][symbol.Name][1][0]}, Estado: {X}, Símbolo: {symbol} )\n"
+        if X in table and symbol in table[X] and len(table[X][symbol]) == 2:
+            return f"Conflicto:\n\t( {table[X][symbol][0][0]} - {table[X][symbol][1][0]}, Estado: {X}, Símbolo: {symbol} )\n"
         return ""
 
     def _str_tables(self):
         str_res = (
-            "\n ---------------------- ACTION --------------------------\n"
-            + str(table_to_dataframe(self.ACTION))
-            + "\n\n ---------------- GOTO ---------------------\n"
-            + str(table_to_dataframe(self.GOTO))
+            "\n < TABLA-ACTION >\n"
+            + str(
+                pretty_table(
+                    self.G, self.ACTION, column_names=["Action"] + [t.Name for t in self.terminals]
+                )
+            )
+            + "\n\n < TABLA-GOTO >\n"
+            + str(
+                pretty_table(
+                    self.G, self.GOTO, column_names=["Goto"] + [nt.Name for nt in self.nonTerminals]
+                )
+            )
         )
         return str_res
 
     def _str_conflicts(self):
-        str_res = (
-            "\n ---------------------- PARSER-CONFLICTS --------------------------\n" + self.errors
-        )
+        str_res = ("\n CONFLICTOS:\n" + self.errors) if self.errors else ""
         return str_res
